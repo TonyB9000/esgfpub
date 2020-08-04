@@ -1,7 +1,9 @@
 #!/bin/bash
 
-
+Archive_Map=/p/user_pub/e3sm/archive/.cfg/Archive_Map
 holodeck_stager="/p/user_pub/e3sm/bartoletti1/Pub_Work/1_Refactor/holodeck_stage_publication.sh"
+
+pub_path_head="/p/user_pub/esgf/staging/prepub"
 
 USAGE=$(cat <<-END
 usage: (this_script) jobset_configfile file_of_Archive_Locator_selectedlines
@@ -37,61 +39,109 @@ fi
 #   dstype_static	(e.g.  "atm nat", "ocn reg", etc)
 #   dstype_freq_list	(e.g.  "mon", "mon day 6hr 3hr", "6hr_snap day_cosp", etc)
 #   resolution          (e.g.  "1deg_atm_60-30km_ocean"   
-#   pubvers=v1
+#   pubversion
 #   overwriteFlag=1
 
+# job_spec
 source $1
-
 
 # file of Archive_Locator lines
 AL_selected=$2
 
+# NEW SYSTEM:  for each AL line, cycle over the dstype_freq_list to collect ALL relevant Archive_Map lines.
+#  (some AM lines may appear repeatedly)
+#  consuct a sort | uniq on the AM lines, and pass these individually to the holodeck stager.
 
 startTime=`date +%s`
 ts=`date +%Y%m%d.%H%M%S`
 holodeck_log=/p/user_pub/e3sm/bartoletti1/Pub_Work/1_Refactor/Holodeck_Process_Log-$ts
 
-# Here, we prepare to process one or more Archive_Locator lines, even when multiple lines may refer to 
-# different parts of a single dataset
-
-casecount=0;
+rm -f /tmp/am_list
 
 for AL_line in `cat $AL_selected`; do   # for a single Archive_Locator line
 
-	ts=`date +%Y%m%d.%H%M%S`
-	echo " " >> $holodeck_log 2>&1
-	echo "$ts:Publication Staging Controller: Archive_Locator_line = $AL_line" >> $holodeck_log 2>&1
-	echo " "
+    # echo "DEBUG: Processing AL_line: $AL_line"
 
-	datasets=0;
-	# For the current case (Experiment / Ensemble), we are prepared only to pull one or more
-	# frequencies for a single realm (e.g.  cam.h1, h2, h3 ...)
+    # Campaign,Model,Experiment,Ensemble,Arch_Path
+    AL_key=`echo $AL_line | cut -f1-4 -d,`
 
-	for freq in $dstype_freq_list; do
-		argslist=()
-		argslist[0]=$AL_line
-		dstype="$dstype_static $freq"
-		argslist[1]=$dstype
-		argslist[2]=$resolution
-		argslist[3]=$pubvers
-		argslist[4]=$overwriteFlag
-                # echo "argslist = ${argslist[@]}"
+    for freq in $dstype_freq_list; do
 
-		ts=`date +%Y%m%d.%H%M%S`
-		echo "$ts:Publication Staging Controller: Calling holodeck_stager with $AL_line \"$dstype\"" >> $holodeck_log 2>&1
-		$holodeck_stager "${argslist[@]}" >> $holodeck_log 2>&1
-		datasets=$(($datasets + 1))
-	done
-	ts=`date +%Y%m%d.%H%M%S`
-	echo "$ts:Publication Staging Controller: Completion case spec: $AL_line ($datasets datasets)" >> $holodeck_log 2>&1
-	echo " " >> $holodeck_log 2>&1
-	casecount=$(($casecount + 1))
+        dstype="$dstype_static $freq"
+        ds_key=`echo $dstype | tr ' ' _`
+        AM_key="$AL_key,$ds_key,"
+        # echo "Produced AM_key: $AM_key"
+        grep $AM_key $Archive_Map >> /tmp/am_list
+    done
+done
+
+IFS=$'\n'
+
+Arch_Map_Selected=`sort /tmp/am_list | uniq`
+
+# Here, we pass each Arch_Map_Selected line to the Holodeck Stager process.
+
+datasets=0;
+
+for AM_line in $Arch_Map_Selected; do   # for a single Archive_Map line
+
+    # echo "DEBUG: Processing AM_line: $AM_line"
+
+    # Campaign,Model,Experiment,Ensemble,DatasetSpec,Arch_Path,ExtractPattern
+
+    ts=`date +%Y%m%d.%H%M%S`
+    echo " " >> $holodeck_log 2>&1
+    echo "$ts:Publication Staging Controller: Archive_Map_line = $AM_line" >> $holodeck_log 2>&1
+    echo " " >> $holodeck_log 2>&1
+
+    model=`echo $AM_line | cut -f2 -d,`
+    exper=`echo $AM_line | cut -f3 -d,`
+    ensem=`echo $AM_line | cut -f4 -d,`
+    ds_spec=`echo $AM_line | cut -f5 -d,`
+    arch_path=`echo $AM_line | cut -f6 -d,`
+    x_pattern=`echo $AM_line | cut -f7 -d,`
+
+    realmcode=`echo $ds_spec | cut -f1 -d_`
+    grid=`echo $ds_spec | cut -f2 -d_`
+    freq=`echo $ds_spec | cut -f3- -d_`
+
+    if [ $realmcode == "atm" ]; then
+        realm="atmos"
+    elif [ $realmcode == "lnd" ]; then
+        realm="land"
+    elif [ $realmcode == "ocn" ]; then
+        realm="ocean"
+    elif [ $realmcode == "river" ]; then
+        realm="river"
+    elif [ $realmcode == "sea-ice" ]; then
+        realm="sea-ice"
+    else
+        echo "ERROR: unrecognized realm code: $realmcode"
+        exit 1
+    fi
+
+    pub_path="$pub_path_head/$model/$exper/$resolution/$realm/native/model-output/$freq/$ensem/$pubversion"       # not very flexible
+
+    argslist=()
+    argslist[0]=$arch_path
+    argslist[1]=$x_pattern
+    argslist[2]=$pub_path
+    argslist[3]=$overwriteFlag
+
+    ts=`date +%Y%m%d.%H%M%S`
+    echo "$ts:Publication Staging Controller: Calling holodeck_stager with pub_path = $pub_path" >> $holodeck_log 2>&1
+    $holodeck_stager "${argslist[@]}" >> $holodeck_log 2>&1
+
+    ts=`date +%Y%m%d.%H%M%S`
+    echo "$ts:Publication Staging Controller: Completion case spec: $AM_line" >> $holodeck_log 2>&1
+    echo " " >> $holodeck_log 2>&1
+    datasets=$(($datasets + 1))
 done
 
 finalTime=`date +%s`
 et=$(($finalTime - $startTime))
 
-echo "Elapsed time: $et seconds.  ($casecount cases processed)" >> $holodeck_log
+echo "Elapsed time: $et seconds.  ($datasets datasets processed)" >> $holodeck_log
 
 
 exit
