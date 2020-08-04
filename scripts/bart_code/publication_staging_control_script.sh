@@ -3,7 +3,7 @@
 Archive_Map=/p/user_pub/e3sm/archive/.cfg/Archive_Map
 holodeck_stager="/p/user_pub/e3sm/bartoletti1/Pub_Work/1_Refactor/holodeck_stage_publication.sh"
 
-pub_path_head="/p/user_pub/esgf/staging/prepub"
+pub_path_head="/p/user_pub/e3sm/staging/prepub"
 
 USAGE=$(cat <<-END
 usage: (this_script) jobset_configfile file_of_Archive_Locator_selectedlines
