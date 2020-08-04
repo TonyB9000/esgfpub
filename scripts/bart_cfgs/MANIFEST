@@ -19,7 +19,7 @@ SRCROOT:/p/user_pub/e3sm/bartoletti1/
 # alpha/
 
 DEPLOY_CFGS:alpha/MANIFEST
-DEPLOY_CFGS:/p/user_pub/e3sm/archive/.cfg/AA_README_Archive
+DEPLOY_CFGS:/p/user_pub/e3sm/archive/.cfg/AA_README_Archive.md
 DEPLOY_CFGS:/p/user_pub/e3sm/archive/.cfg/Archive_Locator
 DEPLOY_CFGS:/p/user_pub/e3sm/archive/.cfg/Archive_Map
 DEPLOY_CFGS:/p/user_pub/e3sm/archive/.cfg/Archive_Map_headers
@@ -33,12 +33,12 @@ DEPLOY_CODE:acode/trisect.py
 
 # PUB_WORK/
 
-DEPLOY_CODE:Pub_Work/1_Refactor/AA_Automation_via_Holodeck
-DEPLOY_CODE:Pub_Work/1_Refactor/AA_README_Extraction
+DEPLOY_CODE:Pub_Work/1_Refactor/AA_Automation_via_Holodeck.md
+DEPLOY_CODE:Pub_Work/1_Refactor/AA_README_Extraction.md
 DEPLOY_CODE:Pub_Work/1_Refactor/extract_dataset_files_to.sh
 DEPLOY_CODE:Pub_Work/1_Refactor/holodeck_stage_publication.sh
 DEPLOY_CODE:Pub_Work/1_Refactor/publication_staging_control_script.sh
-DEPLOY_CODE:Pub_Work/2_Mapwork/AA_README_MW
+DEPLOY_CODE:Pub_Work/2_Mapwork/AA_README_MW.md
 DEPLOY_CODE:Pub_Work/2_Mapwork/make_mapfile.sh
 DEPLOY_CODE:Pub_Work/2_Mapwork/multi_mapfile_generate.sh
 DEPLOY_CODE:Pub_Work/2_Mapwork/dirperms.sh
@@ -52,18 +52,18 @@ DEPLOY_CODE:Pub_Work/3_Publish/publish-thredds-n-publish-only.sh
 # PUB_STATUS/
 
 DEPLOY_CODE:Pub_Status/all_dataset_status.py
-DEPLOY_CODE:Pub_Status/ArchivePathMapper/AA_README_APM
+DEPLOY_CODE:Pub_Status/ArchivePathMapper/AA_README_APM.md
 DEPLOY_CODE:Pub_Status/ArchivePathMapper/archive_path_mapper_stage1.sh
 DEPLOY_CODE:Pub_Status/ArchivePathMapper/archive_path_mapper_stage2.sh
 DEPLOY_CODE:Pub_Status/ArchivePathMapper/archive_path_mapper_stage3.sh
-DEPLOY_CODE:Pub_Status/ArchiveAssess/AA_README_AA
+DEPLOY_CODE:Pub_Status/ArchiveAssess/AA_README_AA.md
 DEPLOY_CODE:Pub_Status/ArchiveAssess/archive_assess_count_first_last.sh
 DEPLOY_CODE:Pub_Status/ArchiveAssess/archive_status_prep.sh
 DEPLOY_CODE:Pub_Status/ArchiveAssess/archive_holodeck_setup_ls-only.sh
 DEPLOY_CODE:Pub_Status/ArchiveAssess/archive_holodeck_setup.sh
 DEPLOY_CODE:Pub_Status/sproket/process_sproket_output.sh
 DEPLOY_CODE:Pub_Status/sproket/sproket_search.sh
-DEPLOY_CODE:Pub_Status/AA_README_PS
+DEPLOY_CODE:Pub_Status/AA_README_PS.md
 DEPLOY_CODE:Pub_Status/archive_versus_pub_compare.sh
 DEPLOY_CODE:Pub_Status/pub-stat-page-prep.sh
 

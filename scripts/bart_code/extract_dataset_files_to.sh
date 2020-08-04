@@ -45,7 +45,7 @@ arch_dir=`echo $spec | cut -f6 -d,`
 tar_patt=`echo $spec | cut -f7 -d,`
 
 #OVERRIDE
-tar_patt=${tar_patt}000*
+# tar_patt=${tar_patt}000*
 
 echo "Cleaning the Holodeck"
 echo " "

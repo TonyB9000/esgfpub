@@ -36,9 +36,10 @@ fi
 # obtain values for 
 #   dstype_static	(e.g.  "atm nat", "ocn reg", etc)
 #   dstype_freq_list	(e.g.  "mon", "mon day 6hr 3hr", "6hr_snap day_cosp", etc)
-#   
-#   
-#   
+#   resolution          (e.g.  "1deg_atm_60-30km_ocean"   
+#   pubvers=v1
+#   overwriteFlag=1
+
 source $1
 
 
@@ -55,8 +56,9 @@ holodeck_log=/p/user_pub/e3sm/bartoletti1/Pub_Work/1_Refactor/Holodeck_Process_L
 
 casecount=0;
 
-for AL_line in `cat $AL_selected`; do
+for AL_line in `cat $AL_selected`; do   # for a single Archive_Locator line
 
+	ts=`date +%Y%m%d.%H%M%S`
 	echo " " >> $holodeck_log 2>&1
 	echo "$ts:Publication Staging Controller: Archive_Locator_line = $AL_line" >> $holodeck_log 2>&1
 	echo " "
@@ -65,21 +67,24 @@ for AL_line in `cat $AL_selected`; do
 	# For the current case (Experiment / Ensemble), we are prepared only to pull one or more
 	# frequencies for a single realm (e.g.  cam.h1, h2, h3 ...)
 
-	ts=`date +%Y%m%d.%H%M%S`
-	echo "$ts:Processing case spec: $AL_line" >> $holodeck_log 2>&1
-	echo " "
 	for freq in $dstype_freq_list; do
 		argslist=()
 		argslist[0]=$AL_line
 		dstype="$dstype_static $freq"
 		argslist[1]=$dstype
+		argslist[2]=$resolution
+		argslist[3]=$pubvers
+		argslist[4]=$overwriteFlag
+                # echo "argslist = ${argslist[@]}"
+
 		ts=`date +%Y%m%d.%H%M%S`
-		echo "$ts: Calling holodeck_stager with $AL_line \"$dstype\"" >> $holodeck_log 2>&1
+		echo "$ts:Publication Staging Controller: Calling holodeck_stager with $AL_line \"$dstype\"" >> $holodeck_log 2>&1
 		$holodeck_stager "${argslist[@]}" >> $holodeck_log 2>&1
 		datasets=$(($datasets + 1))
 	done
 	ts=`date +%Y%m%d.%H%M%S`
-	echo "$ts:Completion case spec: $AL_line ($datasets datasets)" >> $holodeck_log 2>&1
+	echo "$ts:Publication Staging Controller: Completion case spec: $AL_line ($datasets datasets)" >> $holodeck_log 2>&1
+	echo " " >> $holodeck_log 2>&1
 	casecount=$(($casecount + 1))
 done
 

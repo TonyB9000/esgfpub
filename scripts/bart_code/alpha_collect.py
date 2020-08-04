@@ -1,6 +1,6 @@
 import sys, os
 from collections import Counter
-from shutil import copy2
+from shutil import copy2, copyfile
 
 # alpha_collect.py
 #
@@ -48,8 +48,6 @@ def main():
         deployment.append( _.split(':') )
     deploy_cfgs = [ _[1] for _ in deployment if _[0] == 'DEPLOY_CFGS' ]
     deploy_code = [ _[1] for _ in deployment if _[0] == 'DEPLOY_CODE' ]
-    # deploy_cfgs = [ srcroot + str(_) for _ in deploy_cfgs if _[0] != '/' ]
-    # deploy_code = [ srcroot + str(_) for _ in deploy_code if _[0] != '/' ]
 
     # ensure no clobbered basenames
     basenames = [ os.path.basename(_) for _ in deploy_cfgs ]
@@ -76,7 +74,8 @@ def main():
         dstpath = os.path.join(cfgs_repo,os.path.basename(_))
         if not os.path.isfile(dstpath):
             additions.append(os.path.basename(_))
-        copy2(srcpath,dstpath)
+        # copy2(srcpath,dstpath)
+        copyfile(srcpath,dstpath)
 
     print()
 
@@ -87,7 +86,8 @@ def main():
         dstpath = os.path.join(code_repo,os.path.basename(_))
         if not os.path.isfile(dstpath):
             additions.append(os.path.basename(_))
-        copy2(srcpath,dstpath)
+        # copy2(srcpath,dstpath)
+        copyfile(srcpath,dstpath)
 
     print(f' ADDITIONS: ')
     for _ in additions:
