@@ -102,8 +102,8 @@ echo "MKDIR: mkdir -p $pub_path"
 mkdir -p $pub_path
 chmod 755 $pub_path
 
-echo "mv $The_Holodeck/$file_extract_pattern $pub_path"
-mv $The_Holodeck/$tar_patt $pub_path
+echo "mv $The_Holodeck/$x_pattern $pub_path"
+mv $The_Holodeck/$x_pattern $pub_path
 chmod 644 $pub_path/*
 echo " "
 
