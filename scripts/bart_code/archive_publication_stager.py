@@ -3,8 +3,9 @@ import argparse
 from argparse import RawTextHelpFormatter
 import glob
 import shutil
-import subprocess
+from subprocess import Popen, PIPE, check_output
 import time
+from datetime import datetime
 
 #  USAGE:  archive_publication_stager.sh -A arch_path -P extract_pattern -D dest_dir [-O]"
 
@@ -30,6 +31,10 @@ overwrite = False
 
 holodeck = ''
 holozst = ''
+
+def ts():
+    return 'TS_' + datetime.now().strftime('%Y%m%d_%H%M%S')
+
 
 def assess_args():
     global thePWD
@@ -76,8 +81,9 @@ def assess_args():
             print("Error: Given destination directory is not empty, and overwrite is not indicated")
             sys.exit(1)
         
-    holodeck = os.path.join(thePWD,"holodeck-" + str(time.time()))
-    holozst=os.path.join(holodeck,'zstash')
+
+    holodeck = os.path.join(thePWD,"holodeck-" + ts() )
+    holozst = os.path.join(holodeck,'zstash')
 
 def echo_inputs():
     print("Process INPUTS:")
@@ -86,53 +92,58 @@ def echo_inputs():
     print(f'    pub_path:  {pub_path}')
     print(f'    overwrite: {overwrite}')
 
-
 def main():
+
+    for_real = True
 
     assess_args()
 
     # echo_inputs()
 
-    zstashversion = subprocess.check_output(['zstash', 'version']).strip().decode('utf-8')
-    print(f'zstash version: {zstashversion}')
+    zstashversion = check_output(['zstash', 'version']).strip().decode('utf-8')
+    # print(f'zstash version: {zstashversion}')
 
     if not (zstashversion == 'v0.4.1' or zstashversion == 'v0.4.2'):
-        print('ERROR: ABORTING:  zstash version is not 0.4.1 or greater, or is unavailable')
+        print('{ts()}: ERROR: ABORTING:  zstash version is not 0.4.1 or greater, or is unavailable', flush=True)
         sys.exit(1)
 
     # print('Producing Holodeck {} for archive {}'.format(holodeck,arch_path))
-
-    os.mkdir(holodeck)
-    os.mkdir(holozst)
-    os.chdir(holodeck)
-
-    for item in os.scandir(arch_path):
-        base = item.path.split('/')[-1]         # get archive item basename
-        link = os.path.join(holozst,base)       # create full link name 
-        os.symlink(item.path,link)
+    print(f'{ts()}: Extraction: Calling: zstash ls --hpss=none {x_pattern} from location {thePWD}', flush=True)
 
 
-    print("Calling: zstash ls --hpss=none {} from location {}".format(x_pattern,thePWD));
-    # retval = subprocess.call(['zstash', 'ls', '--hpss=none', x_pattern])
-    # retval = subprocess.call(['zstash', 'extract', '--hpss=none', x_pattern], stdout=subprocess.DEVNULL)
-    retval = subprocess.call(['zstash', 'extract', '--hpss=none', x_pattern])
-    if not retval == 0:
-        print("ERROR:  zstash returned exitcode {}".format(retval))
+    if for_real:
+        os.mkdir(holodeck)
+        os.mkdir(holozst)
+        os.chdir(holodeck)
+
+        for item in os.scandir(arch_path):
+            base = item.path.split('/')[-1]         # get archive item basename
+            link = os.path.join(holozst,base)       # create full link name 
+            os.symlink(item.path,link)
+
+        # call zstash
+        cmd = ['zstash', 'extract', '--hpss=none', x_pattern]
+        proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
+        proc_out, proc_err = proc.communicate()
+        if not proc.returncode == 0:
+            print(f'{ts()}: ERROR: zstash returned exitcode {proc.returncode}', flush=True)
+            os.chdir('..')
+            shutil.rmtree(holodeck,ignore_errors=True)
+            sys.exit(retval)
+
+        print(f'{proc_out}',flush=True)
+        print(f'{proc_err}',flush=True)
+
+        os.makedirs(pub_path,exist_ok=True)
+        os.chmod(pub_path,0o755)
+
+        for file in glob.glob(x_pattern):
+            shutil.move(file, pub_path)     # chmod 644?
+            
         os.chdir('..')
         shutil.rmtree(holodeck,ignore_errors=True)
-        sys.exit(retval)
 
-    # print("Extraction Completed:  Files remain in Holodeck {}".format(holodeck))
-    # sys.exit(0)
-        
-    os.makedirs(pub_path,exist_ok=True)
-    os.chmod(pub_path,0o755)
-
-    for file in glob.glob(x_pattern):
-        shutil.move(file, pub_path)     # chmod 644?
-        
-    os.chdir('..')
-    shutil.rmtree(holodeck,ignore_errors=True)
+    print(f'{ts()}: Extraction Completed to {pub_path}', flush=True)
 
     sys.exit(0)
 

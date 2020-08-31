@@ -3,7 +3,7 @@ import argparse
 from argparse import RawTextHelpFormatter
 import glob
 import shutil
-import subprocess
+from subprocess import Popen, PIPE
 import time
 from datetime import datetime
 
@@ -101,6 +101,12 @@ def realm_longname(realmcode):
 
 def main():
 
+    utcStart = time.time()
+    runlog = 'psc_log-' + ts()
+
+    sys.stdout = open(runlog,"w")
+    sys.stderr = sys.stdout
+
     assess_args()
 
     with open(AM_selected) as f:
@@ -108,8 +114,10 @@ def main():
 
     archlist = [ _ for _ in contents if _[:-1] ]
     archspec = {}
+    arch_count = 0
     for archline in archlist:
         archspec = get_archspec(archline)
+        arch_count += 1
 
         # must prepare: archive_publication_stager.py -A arch_path -P extract_pattern -D dest_dir [-O]
 
@@ -131,11 +139,22 @@ def main():
                                 archspec['ensem'], \
                                 jobset['pubversion'])
 
-        print(f'{ts()}: Calling: python archive_publication_stager.py to produce {pub_path}')
+        print(f'{ts()}: Calling: python archive_publication_stager.py to produce {pub_path}', flush=True)
 
-        retval = subprocess.call(['python', 'archive_publication_stager.py', '-A', archspec["apath"], '-P', archspec["apatt"], '-D', pub_path, '-O'])
-        if not retval == 0:
-            print('{ts()}: ERROR: archive_publication_stager returned exitcode {retval}')
+        cmd = ['python', 'archive_publication_stager.py', '-A', archspec["apath"], '-P', archspec["apatt"], '-D', pub_path, '-O']
+        proc = Popen(cmd, stdout=PIPE, stderr=PIPE)       
+        proc_out, proc_err = proc.communicate()
+        if not proc.returncode == 0:
+            print(f'{ts()}: ERROR: archive_publication_stager returned exitcode {proc.returncode}', flush=True)
+
+        print(f'{proc_out}',flush=True)
+        print(f'{proc_err}',flush=True)
+
+    
+    print(f'{ts()}: Completion: Processed {arch_count} archive map lines.',flush=True)
+    utcFinal = time.time()
+    elapsedTime = utcFinal - utcStart
+    print(f'{ts()}: Elapsed Time: {elapsedTime} seconds.',flush=True)
 
     sys.exit(0)
 
