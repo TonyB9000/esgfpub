@@ -13,18 +13,27 @@ def ts():
 
 
 helptext = '''
-    Usage:  archive_map_selector [-h/--help] [-f/--fields | -u/--unique <fieldname> | -s/--select <fieldname>=glob[,<fieldname>=glob}*]
+    Usage:  archive_map_selector [-h/--help] [-f/--fields] | [-u/--unique <fieldname>]
+                    | -s/--select  <fieldname>=glob[,<fieldname>=glob]*
+                    | -x/--exclude <fieldname>=glob[,<fieldname>=glob]*
 
-        Only one of (-f/--fields, -u/--unique, -s/--select) will be accepted.
+        Only one of (-f/--fields, -u/--unique, (-s/--select and/or -x/--exclude) will be accepted.
         -f/--fields:               Provide the addressable fieldnames in the archive map
         -u/--unigue <fieldname>    Provide the sorted, unique values for a given field
-        -s/--select csv-list       A list of field=value pairs, for which matching archive_map records are returned. 
+        -s/--select csv-list       A list of field=value pairs (treated via AND) for which matching archive_map records are returned. 
+        -x/--exclude csv-list      A list of field=value pairs (treated via OR)  for which matching archive_map records are excluded. 
+
+        Example:  archive_map_selector.py -s Campaign=CRYO-v1 -x Model=1_2_1
+            will return all Archive_Map lines for CRYO-v1 datasets except where Model is 1_2_1
+
+        Issues:  The "glob" is not yet supported - field values must be given exactly.
 '''
 
 Arch_Map_File = '/p/user_pub/e3sm/archive/.cfg/Archive_Map'
 fields = False
 unique = False
 select = False
+exclude = False
 target = ''
 selection = ''
 
@@ -33,7 +42,9 @@ def assess_args():
     global target
     global unique
     global select
+    global exclude
     global selection
+    global exclusion
 
     parser = argparse.ArgumentParser(description=helptext, prefix_chars='-', formatter_class=RawTextHelpFormatter)
     parser._action_groups.pop()
@@ -42,11 +53,12 @@ def assess_args():
     optional.add_argument('-f', '--fields', action='store_true', dest="fields")
     optional.add_argument('-u', '--unique', action='store', dest="target", type=str)
     optional.add_argument('-s', '--select', action='store', dest="selection", type=str)
+    optional.add_argument('-x', '--exclude', action='store', dest="exclusion", type=str)
 
     args = parser.parse_args()
 
-    if not (args.fields or args.target or args.selection):
-        print("Error:  One of (-f/--fields, -u/--unique, -s/--select) must be supplied.  Try -h")
+    if not (args.fields or args.target or args.selection or args.exclusion):
+        print("Error:  One of (-f/--fields, -u/--unique, -s/--select, -x/--exclude) must be supplied.  Try -h")
         sys.exit(0)
 
     if args.target:
@@ -55,9 +67,13 @@ def assess_args():
     if args.selection:
         select = True
 
+    if args.exclusion:
+        exclude = True
+
     fields = args.fields
     target = args.target
     selection = args.selection
+    exclusion = args.exclusion
 
 
 am_field = ('Campaign','Model','Experiment','Ensemble','DatasetType','ArchivePath','DatasetMatchPattern')
@@ -79,6 +95,22 @@ def criteria_selection(pool,crit):
                 failed = True
                 break
         if failed:
+            continue
+        retlist.append(atup)
+
+    return retlist
+
+def criteria_exclusion(pool,crit):
+    #
+    retlist = []
+    for atup in pool:
+        skip = False
+        for acrit in crit:
+            var, val = acrit.split('=')
+            if atup[am_field.index(var)] == val: # need RegExp comparison here
+                skip = True
+                break
+        if skip:
             continue
         retlist.append(atup)
 
@@ -123,12 +155,21 @@ def main():
             print(f'{_}')
         sys.exit(0)
     
-    # print(f'Sorry.  -s/--select is not yet implemented')
+    did_select = False
 
     if select:
-        criteria = selection.split(',')
-        selected = criteria_selection(Arch_Map,criteria)
-        print_csv_tuples(selected)
+        selection_criteria = selection.split(',')
+        selected = criteria_selection(Arch_Map,selection_criteria)
+        did_select = True
+
+    if exclude:
+        exclusion_criteria = exclusion.split(',')
+        if did_select:
+            selected = criteria_exclusion(selected,exclusion_criteria)
+        else:
+            selected = criteria_exclusion(Arch_Map,exclusion_criteria)
+        
+    print_csv_tuples(selected)
 
     sys.exit(0)
 
