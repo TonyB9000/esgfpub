@@ -100,11 +100,11 @@ def main():
 
     # echo_inputs()
 
-    zstashversion = check_output(['zstash', 'version']).strip().decode('utf-8')
+    zstashversion = check_output(['zstash', 'version']).decode('utf-8').strip()
     # print(f'zstash version: {zstashversion}')
 
     if not (zstashversion == 'v0.4.1' or zstashversion == 'v0.4.2'):
-        print('{ts()}: ERROR: ABORTING:  zstash version is not 0.4.1 or greater, or is unavailable', flush=True)
+        print(f'{ts()}: ERROR: ABORTING:  zstash version is not 0.4.1 or greater, or is unavailable', flush=True)
         sys.exit(1)
 
     # print('Producing Holodeck {} for archive {}'.format(holodeck,arch_path))
@@ -131,14 +131,16 @@ def main():
             shutil.rmtree(holodeck,ignore_errors=True)
             sys.exit(retval)
 
+        proc_out = proc_out.decode('utf-8')
+        proc_err = proc_err.decode('utf-8')
         print(f'{proc_out}',flush=True)
         print(f'{proc_err}',flush=True)
 
         os.makedirs(pub_path,exist_ok=True)
-        os.chmod(pub_path,0o755)
+        os.chmod(pub_path,0o775)
 
         for file in glob.glob(x_pattern):
-            shutil.move(file, pub_path)     # chmod 644?
+            shutil.move(file, pub_path)     # chmod 664?
             
         os.chdir('..')
         shutil.rmtree(holodeck,ignore_errors=True)
