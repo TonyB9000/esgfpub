@@ -123,7 +123,12 @@ def main():
 
         # pub_path needs: /p/user_pub/e3sm/staging/prepub/<model>/<exper>/<resolution>/<realm>/<grid>/model-output/<freq>/<ensemble>/<pubversion>
 
-        realmcode, grid, freq = archspec['dstyp'].split('_')
+        if len(archspec['dstyp'].split('_')) == 3:
+            realmcode, grid, freq = archspec['dstyp'].split('_')
+        else:
+            realmcode, grid, freq1, freq2 = archspec['dstyp'].split('_')
+            freq = ('_').join([freq1,freq2])
+
         realm = realm_longname(realmcode)
         if grid == 'nat':
             grid = 'native'
@@ -147,6 +152,8 @@ def main():
         if not proc.returncode == 0:
             print(f'{ts()}: ERROR: archive_publication_stager returned exitcode {proc.returncode}', flush=True)
 
+        proc_out = proc_out.decode("utf-8")
+        proc_err = proc_err.decode("utf-8")
         print(f'{proc_out}',flush=True)
         print(f'{proc_err}',flush=True)
 
