@@ -142,7 +142,7 @@ def main():
         for file in glob.glob(x_pattern):
             alt = 0
             dst = os.path.join(pub_path,file)
-            while os.path.exists(dst)
+            while os.path.exists(dst):
                 alt += 1
                 altfile = file + '(' + str(alt) + ')'
                 dst = os.path.join(pub_path,altfile)
