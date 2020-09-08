@@ -140,7 +140,15 @@ def main():
         os.chmod(pub_path,0o775)
 
         for file in glob.glob(x_pattern):
-            shutil.move(file, pub_path)     # chmod 664?
+            alt = 0
+            dst = os.path.join(pub_path,file)
+            while os.path.exists(dst)
+                alt += 1
+                altfile = file + '(' + str(alt) + ')'
+                dst = os.path.join(pub_path,altfile)
+
+            shutil.move(file,dst)     # chmod 664?
+            os.chmod(dst,0o664)
             
         os.chdir('..')
         shutil.rmtree(holodeck,ignore_errors=True)
