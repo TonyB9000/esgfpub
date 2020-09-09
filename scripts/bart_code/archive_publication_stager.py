@@ -140,11 +140,12 @@ def main():
         os.chmod(pub_path,0o775)
 
         for file in glob.glob(x_pattern):
+            bname = os.path.basename(file)
             alt = 0
-            dst = os.path.join(pub_path,file)
+            dst = os.path.join(pub_path,bname)
             while os.path.exists(dst):
                 alt += 1
-                altfile = file + '(' + str(alt) + ')'
+                altfile = bname + '(' + str(alt) + ')'
                 dst = os.path.join(pub_path,altfile)
 
             shutil.move(file,dst)     # chmod 664?
