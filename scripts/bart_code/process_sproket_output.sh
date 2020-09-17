@@ -1,11 +1,23 @@
 #!/bin/bash
 
-rm -f ESGF_publication_report
+# Usage:  process_sproket_output.sh  E3SM_datafile_urls-<timestamp>o
 
-for aline in `cat E3SM_datafile_paths_leaf`; do
-	filecount=`grep $aline E3SM_datafile_paths_full | wc -l`
-	firstfile=`grep $aline E3SM_datafile_paths_full | rev | cut -f1 -d/ | rev | sort | uniq | head -1`
-	finalfile=`grep $aline E3SM_datafile_paths_full | rev | cut -f1 -d/ | rev | sort | uniq | tail -1`
+datafile_urls=$1
+
+ts=`date +%Y%m%d.%H%M%S`
+dataset_paths_full="E3SM_dataset_paths_full-$ts"
+dataset_paths_leaf="E3SM_dataset_paths_leaf-$ts"
+publication_dsids="E3SM_dataset_ids-$ts"
+publication_report="ESGF_publication_report-$ts"
+
+cat $datafile_urls | cut -f7- -d/ | sort | uniq > $dataset_paths_full
+cat $dataset_paths_full | rev | cut -f2- -d/ | rev | sort | uniq > $dataset_paths_leaf
+
+
+for aline in `cat $dataset_paths_leaf`; do
+	filecount=`grep $aline $dataset_paths_full | wc -l`
+	firstfile=`grep $aline $dataset_paths_full | rev | cut -f1 -d/ | rev | sort | uniq | head -1`
+	finalfile=`grep $aline $dataset_paths_full | rev | cut -f1 -d/ | rev | sort | uniq | tail -1`
 	datasetID=`echo $aline | tr / .`
 
 	# handle variable sim-date year counts
@@ -17,7 +29,7 @@ for aline in `cat E3SM_datafile_paths_leaf`; do
 		if [[ $finalfile =~ -*([0-9]{4}-[0-9]{2}) ]]; then
 			yearmo2=`echo ${BASH_REMATCH[1]}`
 		else
-			echo "NOMATCH,$filecount,$datasetID,$firstfile" >> ESGF_publication_report
+			echo "NOMATCH,$filecount,$datasetID,$firstfile" >> $publication_report
 			continue
 		fi
 
@@ -31,7 +43,7 @@ for aline in `cat E3SM_datafile_paths_leaf`; do
 			yspan=$((y2 - y1 + 1))
 		fi
 
-		echo "$yspan,$filecount,$datasetID,$firstfile" >> ESGF_publication_report
+		echo "$yspan,$filecount,$datasetID,$firstfile" >> $publication_report
 		
 
 	elif [[ $firstfile =~ -*([0-9]{6}_[0-9]{6}) ]]; then
@@ -49,9 +61,9 @@ for aline in `cat E3SM_datafile_paths_leaf`; do
 			yspan=$((y2 - y1 + 1))
 		fi
 
-		echo "$yspan,$filecount,$datasetID,$firstfile" >> ESGF_publication_report
+		echo "$yspan,$filecount,$datasetID,$firstfile" >> $publication_report
 	else
-		echo "NOMATCH,$filecount,$datasetID,$firstfile" >> ESGF_publication_report
+		echo "NOMATCH,$filecount,$datasetID,$firstfile" >> $publication_report
 		continue
 	fi
 
