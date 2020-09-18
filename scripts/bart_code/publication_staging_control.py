@@ -139,7 +139,7 @@ def main():
                                 jobset['resolution'], \
                                 realm, \
                                 grid, \
-                                'model_output', \
+                                'model-output', \
                                 freq, \
                                 archspec['ensem'], \
                                 jobset['pubversion'])
