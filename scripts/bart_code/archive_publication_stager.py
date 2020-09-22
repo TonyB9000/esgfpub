@@ -129,7 +129,7 @@ def main():
             print(f'{ts()}: ERROR: zstash returned exitcode {proc.returncode}', flush=True)
             os.chdir('..')
             shutil.rmtree(holodeck,ignore_errors=True)
-            sys.exit(retval)
+            sys.exit(proc.returncode)
 
         proc_out = proc_out.decode('utf-8')
         proc_err = proc_err.decode('utf-8')
