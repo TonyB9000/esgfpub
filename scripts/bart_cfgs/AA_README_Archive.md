@@ -22,7 +22,7 @@ Archive_Locator:
 	The "Archive_Locator" provides the full-path to the archive that contains the materials for a
 	given campaign or model, experiment, and ensemble if appropriate.  For Example:
 
-		archive_path=`cat Archive_Locator | grep 1_0 | grep F2010-HR`
+		archive_path=`cat Archive_Locator | grep 1_0 | grep F2010-HR | cut -f5 -d,`
 
 	will set archive_path to
 
@@ -43,7 +43,6 @@ Standard_Dataset_Extraction_Patterns:
 		lnd nat mon,*clm2.h0*,DEFAULT,
 		river nat mon,*mosart.h0*,DEFAULT,
 		ocn nat mon,*mpaso.hist.am.timeSeriesStatsMonthly.*,DEFAULT,
-		ocn nat globalStats,*mpaso.hist.am.globalStats.*,DEFAULT,
 		ocn nat 5day,*mpaso.hist.am.highFrequencyOutput.*,DEFAULT,
 		sea-ice nat mon,*mpascice.hist.am.timeSeriesStatsMonthly.*,DEFAULT,
 		sea-ice nat day,*mpascice.hist.am.timeSeriesStatsDaily.*,DEFAULT,
