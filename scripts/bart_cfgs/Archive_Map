@@ -1,4 +1,3 @@
-
 BGC-v1,1_1_ECA,hist-BCRC,ens1,atm_nat_3hr,/p/user_pub/e3sm/archive/1_1_ECA/BGC-v1/BCRC_CNPECACNT_20TR.ne30_oECv3.cori-knl,atm/hist/*cam.h3*,dont touch - BGC h3 = 3hr
 BGC-v1,1_1_ECA,hist-BCRC,ens1,atm_nat_3hr,/p/user_pub/e3sm/archive/1_1_ECA/BGC-v1/BCRC_CNPECACNT_20TR.ne30_oECv3.edison,atm/hist/*cam.h3*,dont touch - BGC h3 = 3hr
 BGC-v1,1_1_ECA,hist-BCRC,ens1,atm_nat_3hr_snap,/p/user_pub/e3sm/archive/1_1_ECA/BGC-v1/BCRC_CNPECACNT_20TR.ne30_oECv3.cori-knl,atm/hist/*cam.h2*,dont touch - BGC h2 = 3hr_snap
