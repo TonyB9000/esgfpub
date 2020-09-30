@@ -146,7 +146,7 @@ def main():
         for adict in sdep_selected:
             dstitle = adict['dtype']
             ds_patt = adict['spatt']
-            outfile = ':'.join([str(ALE),basetag,dstitle])
+            outfile = ':'.join([str(ALE),basetag,dstitle,arch_path])
             
             # call zstash
             cmd = ['zstash', 'ls', '--hpss=none', ds_patt]
