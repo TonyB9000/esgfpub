@@ -7,7 +7,7 @@ BGC-v1,1_1_ECA,hist-BDRD,ens1,/p/user_pub/e3sm/archive/1_1_ECA/BGC-v1/20190308.B
 BGC-v1,1_1_ECA,piControl,ens1,/p/user_pub/e3sm/archive/1_1_ECA/BGC-v1/20190308.CNTL.1850-2014
 BGC-v1,1_1_ECA,piControl,ens1,/p/user_pub/e3sm/archive/1_1_ECA/BGC-v1/CNTL_CNPECACNT_SSP85.ne30_oECv3.cori-knl
 BGC-v1,1_1_ECA,ssp585-BCRC,ens1,/p/user_pub/e3sm/archive/1_1_ECA/BGC-v1/BCRC_CNPECACNT_SSP85.ne30_oECv3.cori-knl
-BGC-v1,1_1_ECA,ssp585-BCRC,ens1,/p/user_pub/e3sm/archive/1_1_ECA/BGC-v1/BCRD_CNPECACNT_SSP85.ne30_oECv3.cori-knl
+BGC-v1,1_1_ECA,ssp585-BCRD,ens1,/p/user_pub/e3sm/archive/1_1_ECA/BGC-v1/BCRD_CNPECACNT_SSP85.ne30_oECv3.cori-knl
 BGC-v1,1_1_ECA,ssp585-BDRC,ens1,/p/user_pub/e3sm/archive/1_1_ECA/BGC-v1/20191108.BDRC.SSP85
 BGC-v1,1_1_ECA,ssp585-BDRD,ens1,/p/user_pub/e3sm/archive/1_1_ECA/BGC-v1/20191108.BDRD.SSP85
 BGC-v1,1_1,hist-BCRC,ens1,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.BCRC_CNPCTC20TR_OIBGC.ne30_oECv3.edison
