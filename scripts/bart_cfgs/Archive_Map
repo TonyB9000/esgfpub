@@ -187,41 +187,23 @@ BGC-v1,1_1,hist-BDRD,ens1,ocn_nat_5day_snap,/p/user_pub/e3sm/archive/1_1/BGC-v1/
 BGC-v1,1_1,hist-BDRD,ens1,ocn_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.BDRD_CNPCTC20TR_OIBGC.ne30_oECv3.edison,ocnProcessed/forMPAS-Analysis/mpaso.hist.am.timeSeriesStatsMonthly.*
 BGC-v1,1_1,hist-BDRD,ens1,river_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.BDRD_CNPCTC20TR_OIBGC.ne30_oECv3.edison,rof/hist/*mosart.h0*
 BGC-v1,1_1,hist-BDRD,ens1,sea-ice_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.BDRD_CNPCTC20TR_OIBGC.ne30_oECv3.edison,ice/hist/mpascice.hist.am.timeSeriesStatsMonthly.*
-BGC-v1,1_1,piControl,ens1,atm_nat_3hr,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison,atm/hist/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy.cam.h3.*.nc
-BGC-v1,1_1,piControl,ens1,atm_nat_3hr,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison,atm/hist/*cam.h3*,dont touch - BGC h3 = 3hr
+BGC-v1,1_1,piControl,ens1,atm_nat_3hr,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison,atm/hist/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison.cam.h3.*.nc
 BGC-v1,1_1,piControl,ens1,atm_nat_3hr,/p/user_pub/e3sm/archive/1_1/BGC-v1/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy,atm/hist/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy.cam.h3.*.nc
-BGC-v1,1_1,piControl,ens1,atm_nat_3hr,/p/user_pub/e3sm/archive/1_1/BGC-v1/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy,atm/hist/*cam.h3*,dont touch - BGC h3 = 3hr
-BGC-v1,1_1,piControl,ens1,atm_nat_3hr_snap,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison,atm/hist/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy.cam.h2.*.nc
-BGC-v1,1_1,piControl,ens1,atm_nat_3hr_snap,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison,atm/hist/*cam.h2*,dont touch - BGC h2 = 3hr_snap
+BGC-v1,1_1,piControl,ens1,atm_nat_3hr_snap,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison,atm/hist/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison.cam.h2.*.nc
 BGC-v1,1_1,piControl,ens1,atm_nat_3hr_snap,/p/user_pub/e3sm/archive/1_1/BGC-v1/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy,atm/hist/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy.cam.h2.*.nc
-BGC-v1,1_1,piControl,ens1,atm_nat_3hr_snap,/p/user_pub/e3sm/archive/1_1/BGC-v1/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy,atm/hist/*cam.h2*,dont touch - BGC h2 = 3hr_snap
-BGC-v1,1_1,piControl,ens1,atm_nat_day,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison,atm/hist/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy.cam.h1.*.nc
-BGC-v1,1_1,piControl,ens1,atm_nat_day,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison,atm/hist/*cam.h1*
+BGC-v1,1_1,piControl,ens1,atm_nat_day,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison,atm/hist/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison.cam.h1.*.nc
 BGC-v1,1_1,piControl,ens1,atm_nat_day,/p/user_pub/e3sm/archive/1_1/BGC-v1/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy,atm/hist/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy.cam.h1.*.nc
-BGC-v1,1_1,piControl,ens1,atm_nat_day,/p/user_pub/e3sm/archive/1_1/BGC-v1/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy,atm/hist/*cam.h1*
-BGC-v1,1_1,piControl,ens1,atm_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison,atm/hist/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy.cam.h0.*.nc
-BGC-v1,1_1,piControl,ens1,atm_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison,atm/hist/*cam.h0*
+BGC-v1,1_1,piControl,ens1,atm_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison,atm/hist/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison.cam.h0.*.nc
 BGC-v1,1_1,piControl,ens1,atm_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy,atm/hist/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy.cam.h0.*.nc
-BGC-v1,1_1,piControl,ens1,atm_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy,atm/hist/*cam.h0*
-BGC-v1,1_1,piControl,ens1,lnd_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison,lnd/hist/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy.clm2.h0.*.nc
-BGC-v1,1_1,piControl,ens1,lnd_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison,lnd/hist/*clm2.h0*
+BGC-v1,1_1,piControl,ens1,lnd_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison,lnd/hist/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison.clm2.h0.*.nc
 BGC-v1,1_1,piControl,ens1,lnd_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy,lnd/hist/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy.clm2.h0.*.nc
-BGC-v1,1_1,piControl,ens1,lnd_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy,lnd/hist/*clm2.h0*
-BGC-v1,1_1,piControl,ens1,ocn_nat_5day_snap,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison,ocnProcessed/hist5day/mpaso.hist.am.highFrequencyOutput.*
 BGC-v1,1_1,piControl,ens1,ocn_nat_5day_snap,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison,ocnProcessed/hist5day/mpaso.hist.am.highFrequencyOutput.*.nc
-BGC-v1,1_1,piControl,ens1,ocn_nat_5day_snap,/p/user_pub/e3sm/archive/1_1/BGC-v1/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy,ocnProcessed/hist5day/mpaso.hist.am.highFrequencyOutput.*
 BGC-v1,1_1,piControl,ens1,ocn_nat_5day_snap,/p/user_pub/e3sm/archive/1_1/BGC-v1/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy,ocnProcessed/hist5day/mpaso.hist.am.highFrequencyOutput.*.nc
-BGC-v1,1_1,piControl,ens1,ocn_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison,ocnProcessed/forMPAS-Analysis/mpaso.hist.am.timeSeriesStatsMonthly.*
 BGC-v1,1_1,piControl,ens1,ocn_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison,ocnProcessed/forMPAS-Analysis/mpaso.hist.am.timeSeriesStatsMonthly.*.nc
-BGC-v1,1_1,piControl,ens1,ocn_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy,ocnProcessed/forMPAS-Analysis/mpaso.hist.am.timeSeriesStatsMonthly.*
 BGC-v1,1_1,piControl,ens1,ocn_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy,ocnProcessed/forMPAS-Analysis/mpaso.hist.am.timeSeriesStatsMonthly.*.nc
-BGC-v1,1_1,piControl,ens1,river_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison,rof/hist/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy.mosart.h0.*.nc
-BGC-v1,1_1,piControl,ens1,river_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison,rof/hist/*mosart.h0*
+BGC-v1,1_1,piControl,ens1,river_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison,rof/hist/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison.mosart.h0.*.nc
 BGC-v1,1_1,piControl,ens1,river_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy,rof/hist/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy.mosart.h0.*.nc
-BGC-v1,1_1,piControl,ens1,river_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy,rof/hist/*mosart.h0*
-BGC-v1,1_1,piControl,ens1,sea-ice_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison,ice/hist/mpascice.hist.am.timeSeriesStatsMonthly.*
 BGC-v1,1_1,piControl,ens1,sea-ice_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20181217.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.edison,ice/hist/mpascice.hist.am.timeSeriesStatsMonthly.*.nc
-BGC-v1,1_1,piControl,ens1,sea-ice_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy,ice/hist/mpascice.hist.am.timeSeriesStatsMonthly.*
 BGC-v1,1_1,piControl,ens1,sea-ice_nat_mon,/p/user_pub/e3sm/archive/1_1/BGC-v1/20191204.CNTL_CNPCTC1850_OIBGC.ne30_oECv3.compy,ice/hist/mpascice.hist.am.timeSeriesStatsMonthly.*.nc
 BGC-v1,1_1,ssp585-BCRC,ens1,atm_nat_3hr,/p/user_pub/e3sm/archive/1_1/BGC-v1/20191107.BCRC_CNPCTC_SSP585_OIBGC.ne30_oECv3.compy,atm/hist/20191107.BCRC_CNPCTC_SSP585_OIBGC.ne30_oECv3.compy.cam.h3.*.nc
 BGC-v1,1_1,ssp585-BCRC,ens1,atm_nat_3hr_snap,/p/user_pub/e3sm/archive/1_1/BGC-v1/20191107.BCRC_CNPCTC_SSP585_OIBGC.ne30_oECv3.compy,atm/hist/20191107.BCRC_CNPCTC_SSP585_OIBGC.ne30_oECv3.compy.cam.h2.*.nc
