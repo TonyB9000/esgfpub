@@ -257,6 +257,7 @@ CRYO-v1,1_2,G-IAF,ens1,ocn_nat_mon,/p/user_pub/e3sm/archive/1_2/CRYO-v1/20190923
 CRYO-v1,1_2,G-IAF,ens1,sea-ice_nat_mon,/p/user_pub/e3sm/archive/1_2/CRYO-v1/20190923.GMPAS-IAF.T62_oEC60to30v3wLI.cori-knl,archive/ice/hist/mpascice.hist.am.timeSeriesStatsMonthly.*
 CRYO-v1,1_3,G-IAF-DIB-ISMF-3dGM,ens1,ocn_nat_5day_snap,/p/user_pub/e3sm/archive/1_3/CRYO-v1/20190819.GMPAS-DIB-IAF-ISMF.T62_oEC60to30v3wLI.cori-knl.testNewGM,archive/ocn/hist/mpaso.hist.am.highFrequencyOutput.*
 CRYO-v1,1_3,G-IAF-DIB-ISMF-3dGM,ens1,ocn_nat_mon,/p/user_pub/e3sm/archive/1_3/CRYO-v1/20190819.GMPAS-DIB-IAF-ISMF.T62_oEC60to30v3wLI.cori-knl.testNewGM,archive/ocn/hist/mpaso.hist.am.timeSeriesStatsMonthly.*
+CRYO-v1,1_3,G-IAF-DIB-ISMF-3dGM,ens1,sea-ice_nat_mon,/p/user_pub/e3sm/archive/1_3/CRYO-v1/20190819.GMPAS-DIB-IAF-ISMF.T62_oEC60to30v3wLI.cori-knl.testNewGM,archive/ice/hist/mpassi.hist.am.timeSeriesStatsMonthly.*
 DECK-v1,1_0,1pctCO2,ens1,atm_nat_3hr,/p/user_pub/e3sm/archive/1_0/DECK-v1/20180215.DECKv1b_1pctCO2.ne30_oEC.edison,archive/atm/hist/*cam.h4*
 DECK-v1,1_0,1pctCO2,ens1,atm_nat_6hr,/p/user_pub/e3sm/archive/1_0/DECK-v1/20180215.DECKv1b_1pctCO2.ne30_oEC.edison,archive/atm/hist/*cam.h3*
 DECK-v1,1_0,1pctCO2,ens1,atm_nat_6hr_snap,/p/user_pub/e3sm/archive/1_0/DECK-v1/20180215.DECKv1b_1pctCO2.ne30_oEC.edison,archive/atm/hist/*cam.h2*
