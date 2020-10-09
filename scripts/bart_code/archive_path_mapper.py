@@ -74,6 +74,7 @@ def get_sdep_spec(specline):
     return aspec
 
 disqual = [ 'rest/', 'post/', 'test', 'init', 'run/try', 'run/bench', 'old/run', 'pp/remap', 'a-prime', 'lnd_rerun', 'atm/ncdiff', 'archive/rest', 'fullD', 'photic']
+disqual_rst = [ 'post/', 'test', 'init', 'run/try', 'run/bench', 'old/run', 'pp/remap', 'a-prime', 'lnd_rerun', 'atm/ncdiff', 'fullD', 'photic']
 
 def recover_filename_elements(filename):
     # convert colon-separated archive_map key to CSV and pipe-coded archive-path to a true path
@@ -181,10 +182,14 @@ def main():
     for filename in os.listdir(pathsFound):
         thepath = os.path.join('PathsFound',filename)
 
+        dq = disqual
+        if 'restart_fixed' in thepath:
+            dq = disqual_rst 
+
         qualified = []
         with open(thepath) as f:
             for aline in f:
-                if any( aline.startswith(_) for _ in disqual ):
+                if any( aline.startswith(_) for _ in dq ):
                     continue
                 qualified.append(aline)
         if len(qualified):
