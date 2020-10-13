@@ -1,5 +1,7 @@
 import os, sys
 import argparse
+import time
+from datetime import datetime
 
 acomment = 'Hangs on Links'
 
@@ -16,6 +18,9 @@ def assess_args():
 
 warehouse = '/p/user_pub/e3sm/staging/prepub'
 
+ts=datetime.now().strftime('%Y%m%d_%H%M%S')
+paths_out = 'warehouse_paths-' + ts
+stats_out = 'warehouse_status-' + ts
 
 # dsid:  root,model,experiment.resolution. ... .realm.grid.otype.ens.vcode
 
@@ -71,6 +76,7 @@ def dataset_print_csv( akey, dkey ):
     print(f'{akey[0]},{akey[1]},{akey[2]},{dkey}')
 
 
+print_paths = True
 
 def main():
 
@@ -100,7 +106,16 @@ def main():
     dkeys = []
     vcodes = []
 
+    if print_paths:
+        with open(paths_out,'w') as f:
+            stdout_orig = sys.stdout
+            sys.stdout = f
+            for atup in wh_nonempty:
+                print(f'{atup[0]}')
+            sys.stdout = stdout_orig
+
     for atup in wh_nonempty:
+
         idval = '.'.join(atup[0].split('/')[5:])
         idvals.append(idval)
         # print(f'idval: {idval}')
@@ -137,20 +152,27 @@ def main():
         dataset_status[akey][dkey].append(vcode)
         dataset_status[akey][dkey].sort()
 
-    for idval in idvals:
-        akey = get_dsid_arch_key(idval)
-        dkey = get_dsid_type_key(idval)
-        vlist = dataset_status[akey][dkey]
-        statlist = ['__','__','__']
-        if 'v0' in vlist:
-            statlist[0] = 'v0'
-        if 'v1' in vlist:
-            statlist[1] = 'v1'
-        if 'v2' in vlist:
-            statlist[2] = 'v2'
-        statcode = '.'.join(statlist)
-        print(f'STATUS={statcode}:',end ='')
-        dataset_print_csv(akey,dkey)
+
+    stdout_orig = sys.stdout
+    with open(stats_out,'w') as f:
+        sys.stdout = f
+
+        for idval in idvals:
+            akey = get_dsid_arch_key(idval)
+            dkey = get_dsid_type_key(idval)
+            vlist = dataset_status[akey][dkey]
+            statlist = ['__','__','__']
+            if 'v0' in vlist:
+                statlist[0] = 'v0'
+            if 'v1' in vlist:
+                statlist[1] = 'v1'
+            if 'v2' in vlist:
+                statlist[2] = 'v2'
+            statcode = '.'.join(statlist)
+            print(f'STATUS={statcode}:',end ='')
+            dataset_print_csv(akey,dkey)
+
+        sys.stdout = stdout_orig
 
 
     sys.exit(0)
