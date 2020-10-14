@@ -8,11 +8,16 @@ import time
 from datetime import datetime
 
 helptext = '''
-    Usage:  archive_path_mapper -a al_listfile
+    Usage:  archive_path_mapper -a al_listfile [-s sdepfile]
 
     The archive_path_mapper accepts a file containing one or more Archive_Locator specification line, and
 
     See: "/p/user_pub/e3sm/archive/.cfg/Archive_Locator" for archive selection specification lines.
+
+    By default, the archive(s) will be plied against every file-pattern listed in the pattern file
+        /p/user_pub/e3sm/archive/.cfg/Standard_Datatype_Extraction_Patterns
+
+    You can override this to seek only selected patterns by supplying a file of similar format.
 
     NOTE:  This process requires an environment with zstash v0.4.1 or greater.
 '''
@@ -39,6 +44,7 @@ def ts():
 
 def assess_args():
     global AL_Listfile
+    global the_SDEP
 
     # parser = argparse.ArgumentParser(description=helptext, prefix_chars='-')
     parser = argparse.ArgumentParser(description=helptext, prefix_chars='-', formatter_class=RawTextHelpFormatter)
@@ -47,10 +53,13 @@ def assess_args():
     optional = parser.add_argument_group('optional arguments')
 
     required.add_argument('-a', '--al_spec', action='store', dest="AL_Listfile", type=str, required=True)
+    optional.add_argument('-s', '--sdep_spec', action='store', dest="SDEP_Pattfile", type=str, required=False)
 
     args = parser.parse_args()
 
     AL_Listfile = args.AL_Listfile
+    if args.SDEP_Pattfile:
+        the_SDEP = args.SDEP_Pattfile
 
 
 
