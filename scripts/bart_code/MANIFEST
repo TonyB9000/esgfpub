@@ -1,0 +1,76 @@
+
+CFGS_REPO=/p/user_pub/e3sm/bartoletti1/alpha/github/esgfpub/scripts/bart_cfgs/
+CODE_REPO=/p/user_pub/e3sm/bartoletti1/alpha/github/esgfpub/scripts/bart_code/
+
+# for every line in MANIFEST that begins "DEPLOY_CFG:" the remainder is the fullpath to
+#  a config file that is also in "cfgs_repo"
+
+# for every line in MANIFEST that begins "DEPLOY_CODE:" the remainder is the fullpath to
+#  a code script (bash or python) that is also in "code_repo"
+
+# the "collection operation" MUST Error/Exit if
+#  the basename of any two files in DEPLOY_CFG or DEPLOY_CODE have the same name.
+#  Otherwise, the files are copied to cfgs_repo or code_repo, respectively.
+
+# if any path does NOT begin with / it is assumed that it is relative to SRCROOT.
+
+SRCROOT:/p/user_pub/e3sm/bartoletti1/
+
+# alpha/
+
+DEPLOY_CFGS:alpha/MANIFEST
+DEPLOY_CFGS:/p/user_pub/e3sm/archive/.cfg/AA_README_Archive.md
+DEPLOY_CFGS:/p/user_pub/e3sm/archive/.cfg/Archive_Locator
+DEPLOY_CFGS:/p/user_pub/e3sm/archive/.cfg/Archive_Map
+DEPLOY_CFGS:/p/user_pub/e3sm/archive/.cfg/Archive_Map_headers
+DEPLOY_CFGS:/p/user_pub/e3sm/archive/.cfg/Filename_SimDate_Locator
+DEPLOY_CFGS:/p/user_pub/e3sm/archive/.cfg/Standard_Datatype_Extraction_Patterns
+
+# acode/
+
+DEPLOY_CODE:acode/alpha_collect.py
+DEPLOY_CODE:acode/template_args.py
+DEPLOY_CODE:acode/trisect.py
+
+# PUB_WORK/
+
+DEPLOY_CODE:Pub_Work/0_Extraction/AA_Automation_via_Holodeck.md
+DEPLOY_CODE:Pub_Work/0_Extraction/AA_README_Extraction.md
+DEPLOY_CODE:Pub_Work/0_Extraction/archive_dataset_extractor.py
+DEPLOY_CODE:Pub_Work/0_Extraction/archive_map_selector.py
+DEPLOY_CODE:Pub_Work/0_Extraction/archive_publication_stager.py
+DEPLOY_CODE:Pub_Work/0_Extraction/publication_staging_control.py
+DEPLOY_CODE:Pub_Work/1_Refactor/AA_README_Warehouse.py
+DEPLOY_CODE:Pub_Work/1_Refactor/warehouse_assign.py
+DEPLOY_CODE:Pub_Work/1_Refactor/warehouse_publish.py
+DEPLOY_CODE:Pub_Work/2_Mapwork/AA_README_MW.md
+DEPLOY_CODE:Pub_Work/2_Mapwork/make_mapfile.sh
+DEPLOY_CODE:Pub_Work/2_Mapwork/multi_mapfile_generate.sh
+DEPLOY_CODE:Pub_Work/2_Mapwork/dirperms.sh
+DEPLOY_CODE:Pub_Work/3_Publish/publish-all-stages-autodelete.sh
+DEPLOY_CODE:Pub_Work/3_Publish/publish-all-stages.sh
+DEPLOY_CODE:Pub_Work/3_Publish/publish-azb-v2.sh
+DEPLOY_CODE:Pub_Work/3_Publish/publish-db-ingest-only.sh
+DEPLOY_CODE:Pub_Work/3_Publish/publish-publish-only.sh
+DEPLOY_CODE:Pub_Work/3_Publish/publish-thredds-n-publish-only.sh
+
+# PUB_STATUS/
+
+DEPLOY_CODE:Pub_Status/all_dataset_status.py
+DEPLOY_CODE:Pub_Status/warehouse_status.py
+DEPLOY_CODE:Pub_Status/ArchivePathMapper/AA_README_APM.md
+DEPLOY_CODE:Pub_Status/ArchivePathMapper/archive_path_mapper.py
+DEPLOY_CODE:Pub_Status/ArchiveAssess/AA_README_AA.md
+DEPLOY_CODE:Pub_Status/ArchiveAssess/archive_assess_count_first_last.sh
+DEPLOY_CODE:Pub_Status/ArchiveAssess/archive_status_prep.sh
+DEPLOY_CODE:Pub_Status/ArchiveAssess/archive_holodeck_setup_ls-only.sh
+DEPLOY_CODE:Pub_Status/ArchiveAssess/archive_holodeck_setup.sh
+DEPLOY_CODE:Pub_Status/ArchiveAssess/archive_holodeck_setup.py
+DEPLOY_CODE:Pub_Status/sproket/AA_README_sproket.md
+DEPLOY_CODE:Pub_Status/sproket/process_sproket_output.sh
+DEPLOY_CODE:Pub_Status/sproket/para/parallel_sproket.sh
+DEPLOY_CODE:Pub_Status/AA_README_PS.md
+DEPLOY_CODE:Pub_Status/archive_versus_pub_compare.sh
+DEPLOY_CODE:Pub_Status/pub-stat-page-prep.sh
+
+
