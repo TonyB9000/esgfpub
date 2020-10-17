@@ -17,17 +17,17 @@ helptext = '''
 
     For each listed path, it will:
 
-    1.  check that each path ends with "v#.P", where # in {1 - 9} (else WARNS of path and skips)
-        (Use the "warehouse_assign" utility to set the directories to "v#.P" status)
+    1.  check that each path ends with "v#:P", where # in {1 - 9} (else WARNS of path and skips)
+        (Use the "warehouse_assign" utility to set the directories to "v#:P" status)
 
-    2.  temporarily changes the directory warehouse status to "working" (~)
+    2.  temporarily changes the directory warehouse status to "working" (v#:~)
     3.  creates a path below E3SM_Publish,
 
-            /p/user_pub/work/E3SM/(newpath.v#)
+            /p/user_pub/work/E3SM/(newpath/v#)
 
         matching the existing path below the warehouse
 
-            /p/user_pub/e3sm/staging/prepub/(curpath.v#P)
+            /p/user_pub/e3sm/staging/prepub/(curpath/v#:P)
 
         If the path already exists but is not empty, the corresponding file lists are compared.
         If they intersect, a warning is issued, and this path is skipped (need "overwrite" flag).
@@ -35,7 +35,7 @@ helptext = '''
     4.  count the files in the warehouse path
     5.  move the files from warehouse to publication
     6.  recount files in publication to ensure the counts match
-        (if ok, change status to v#.X indicating 'ok to delete)
+        (if ok, change status to v#:X indicating 'ok to delete)
         (if not, leave in 'working' state, issue warning message and move on to next path)
 
     The list of (publication) paths that passed the above gauntlet intact are then passed to
@@ -120,7 +120,7 @@ def set_vpath_statusspec(apath,statspec):
         return ''
 
     spos = 0    # generalize
-    tailparts = tail.split('.')
+    tailparts = tail.split(':')
 
     vers_part = tailparts[0]
     if len(tailparts) == 1:
@@ -137,7 +137,7 @@ def set_vpath_statusspec(apath,statspec):
     else:
         stat_part = stat_part[:spos] + statspec[spos] + stat_part[spos+1:]
 
-    newtail = '.'.join([vers_part,stat_part])
+    newtail = ':'.join([vers_part,stat_part])
     newpath = os.path.join(head,newtail)
 
     print(f' renaming {apath} to {newpath}')
@@ -151,9 +151,10 @@ def get_vpath_status(apath):
         print(f'WARNING: Not VLeaf: {apath}')
         return -1
 
-    tailparts = tail.split('.')
+    tailparts = tail.split(':')
 
-    stat_part = tail.split('.')[1]
+    if len(tailparts) > 1:
+    stat_part = tailparts[1]
     stat_code = stat_part[0]
 
     stat_keys = [k for k,v in vstatcode.items() if v == statcode]
@@ -169,7 +170,7 @@ def filterByStatus(dlist,instat):
     rejects = []
     for apath in dlist:
         head, tail = os.path.split(apath)
-        tailparts = tail.split('.')
+        tailparts = tail.split(':')
         if len(tailparts) < 2:
             rejects.append(apath)
             continue
@@ -213,11 +214,12 @@ def main():
     # split according to P-status
     PubList, Rejects = filterByStatus(PubList,'P')
     if len(Rejects) > 0:
-        print(f'The following {len(Rejects)} warehouse paths do not have the expected publication status (.P)')
-        print(f'(Use the "warehouse_assign" utility to set the directories to "v#.P" status)')
+        print(f'The following {len(Rejects)} warehouse paths do not have the expected publication status (:P)')
+        print(f'(Use the "warehouse_assign" utility to set the directories to "v#:P" status)')
         printList(Rejects)
 
     p_success = []
+    w_success = []
     for wpath in PubList:
         ver = pubVersion(wpath)
         if ver < 1 or ver > 9:
@@ -249,7 +251,7 @@ def main():
         for wfile in wfilenames:
             src = os.path.join(wpath,wfile)
             dst = os.path.join(ppath,wfile)
-            shutil.move(src,dst)     # chmod 664?
+            shutil.move(src,dst)
             os.chmod(dst,0o664)
 
         _, _, pfilenames = walk(ppath).next()
@@ -260,8 +262,12 @@ def main():
             continue
 
         wpath = set_vpath_statusspec(wpath,'X')
-        p_success.append(wpath)
+        w_success.append(wpath)
+        p_success.append(ppath)
+    
+    printList(p_success)
         
+    
     sys.exit(0)
 
     '''

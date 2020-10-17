@@ -21,10 +21,11 @@ helptext = '''
         -r, --rootpath              Override default warehouse /p/user_pub/e3sm/staging/prepub
         -w, --warehouse-paths       File of selected warehouse leaf directoriesa upon which to operate.
         -l, --listpaths mode        List (all,empty,nonempty) leaf directories under rootpath (warehouse)
-        -g, --getstatus statcode    Return all leaf directories possessing the given statcode.
+        -g, --getstatus statword    Return all leaf directories possessing the given statword.
         -G, --getstatus statstring  Return all leaf directories possessing the given statcode string.
-        -s, --setstatus statcode    Apply the given statcode to all qualifying leaf directories.
+        -s, --setstatus statword    Apply the given statword to all qualifying leaf directories.
         -S, --setstatus statstring  Apply the given statcode string to all qualifying leaf directories.
+        --setversion version        For each path whose leaf is vN*, set N to version unless path exists.
         --force                     Override 'hold', 'working' and 'nostatus" dirs that prevent processing.
 
     Options that involve making changes (-s, --setstatus) require the "-w filelist" specification.
@@ -53,9 +54,9 @@ helptext = '''
 
         The intention is to supply extended codes to directories, such as
 
-            v0.-FtD--:  open for processing, Failed timecheck, Needs time-rectify, ...
+            v0:-FtD--:  open for processing, Failed timecheck, Needs time-rectify, ...
 
-        Presently only the first position (v0.-, v0.P, etc) are available.
+        Presently only the first position (v0:-, v1:P, etc) are available.
 
         So, 'setstatus hold' is the same as 'Setstatus ^', but eventually 'setstatus' will affect
         only a single position, whereas 'SetStatus -FtD--' will completely replace the target
@@ -64,26 +65,28 @@ helptext = '''
         Hence, a bash command like "mv dirpath/v0.* dirpath/v0" will take a directory out of play.
 
     WARNING:  Although these directory extensions are part of the formal directory path, they
-        should not be replicated with the same "v#".  That is, there must be only ONE v0.statcode,
-        and ONE v1.statcode, etc.
+        should not be replicated with the same "v#".  That is, there must be only ONE v0:statcode,
+        and ONE v1:statcode, etc.
  
 '''
 
 gv_WH_root = '/p/user_pub/e3sm/staging/prepub'
 
 gv_SelectionFile = ''
-gv_Force = False
 gv_setstat = ''
 gv_Setstat = ''
 gv_getstat = ''
 gv_Getstat = ''
 gv_PathSpec = ''    # all, empty, nonempty
+gv_SetVers = ''
+gv_Force = False
 
 
 def assess_args():
     global gv_WH_root
     global gv_SelectionFile
     global gv_Force
+    global gv_SetVers
     global gv_setstat
     global gv_Setstat
     global gv_getstat
@@ -102,6 +105,7 @@ def assess_args():
     optional.add_argument('-l', '--listpaths', action='store', dest="gv_pathspec", type=str, required=False)
     optional.add_argument('-s', '--setstatus', action='store', dest="gv_setstat", type=str, required=False)
     optional.add_argument('-S', '--Setstatus', action='store', dest="gv_setstats", type=str, required=False)
+    optional.add_argument('--setversion', action='store', dest="gv_setversion", required=False)
     optional.add_argument('--force', action='store_true', dest="gv_force", required=False)
 
 
@@ -137,6 +141,12 @@ def assess_args():
     if args.gv_setstat and args.gv_setstats:
         print("Error:  Only one of '-setstat statword' or '-setstats statstring' may be specified.  Try -h")
         sys.exit(0)
+
+    if args.gv_setversion:
+        if not args.gv_setversion in '0123456789':
+            print("Error:  version assignment must be in {0..9}")
+            sys.exit(0)
+        gv_SetVers = args.gv_setversion
 
     if args.gv_force:
         gv_Force = args.gv_force
@@ -212,10 +222,10 @@ def set_vpath_statusspec(apath,statspec):
 
     if not isVLeaf(tail):
         print(f'WARNING: Not VLeaf: {apath}')
-        return -1
+        return ''
 
     spos = 0    # generalize
-    tailparts = tail.split('.')
+    tailparts = tail.split(':')
 
     vers_part = tailparts[0]
     if len(tailparts) == 1:
@@ -225,18 +235,19 @@ def set_vpath_statusspec(apath,statspec):
 
     if (stat_part == '' or stat_part[spos] == vstatcode['hold'] or stat_part[spos] == vstatcode['working']) and not gv_Force:
         print(f'WARNING: set_vpath_statusspec precluded without -f (force)')
-        return -1
+        return ''
 
     if stat_part == '':
         stat_part = str(statspec[spos])
     else:
         stat_part = stat_part[:spos] + statspec[spos] + stat_part[spos+1:]
 
-    newtail = '.'.join([vers_part,stat_part])
+    newtail = ':'.join([vers_part,stat_part])
     newpath = os.path.join(head,newtail)
 
-    print(f' renaming {apath} to {newpath}')
+    # print(f' renaming {apath} to {newpath}')
     os.rename(apath,newpath)
+    return newpath
 
 def get_vpath_status(apath):
     head, tail = os.path.split(apath)
@@ -247,7 +258,8 @@ def get_vpath_status(apath):
 
     tailparts = tail.split('.')
 
-    stat_part = tail.split('.')[1]
+    if len(tailparts) > 1:
+    stat_part = tailparts[1]
     stat_code = stat_part[0]
 
     stat_keys = [k for k,v in vstatcode.items() if v == statcode]
@@ -260,22 +272,62 @@ def statusMatch(a,b):    # someday, handle multi-positional matchings
 
 def filterByStatus(dlist,instat):
     retlist = []
+    rejects = []
     for apath in dlist:
         head, tail = os.path.split(apath)
-        tailparts = tail.split('.')
+        tailparts = tail.split(':')
         if len(tailparts) < 2:
+            rejects.append(apath)
             continue
         if not statusMatch(tailparts[1],instat):
+            rejects.append(apath)
             continue
         retlist.append(apath)
 
-    return retlist
+    return retlist, rejects
+
+def pubVersion(apath):
+    vers = int( apath.split('/')[-1][1:2] )
+    return vers
+
+def setVersion(apath,newver):   # where pathleaf = vN*, replace N with N+1 UNLESS it exists
+    head, tail = os.path.split(apath)
+    if tail == '':
+        apath = head
+        head, tail = os.path.split(apath)
+    if not isVLeaf(tail):
+        print(f'WARNING: cannot setversion path: {apath}')
+        return ''
+    tailparts = tail.split(':')
+    vpart = tailparts[0]
+    vpart_list = list(vpart)
+    vpart_list[1] = newver[0]
+    vpart = ''.join(vpart_list)
+    spart = ''
+    if len(tailparts) > 1:
+        spart = tailparts[1]
+        newtail = ':'.join([vpart,spart])
+    else:
+        newtail = vpart
+    newpath = os.path.join(head,newtail)
+
+    # print(f'newpath: {newpath}')
+    # does path already exist?
+    if os.path.exists(newpath):
+        print(f'WARNING: cannot setversion to {newver}: path exists {apath}')
+        return ''
+
+    os.rename(apath,newpath)
+
+    return newpath
+
 
 def printList(alist):
     for _ in alist:
         print(f'{_}')
 
 def main():
+    global gv_Getstat
 
     assess_args()
 
@@ -312,7 +364,7 @@ def main():
 
     # process getStat
     if len(gv_Getstat) > 0:
-        DirList = filterByStatus(DirList,gv_Getstat)
+        DirList,_ = filterByStatus(DirList,gv_Getstat)
         if len(gv_Setstat) == 0:        # output results and exit
             printList(DirList)
             sys.exit(0)
@@ -323,6 +375,14 @@ def main():
     printList(DirList)
     sys.exit(0)
     '''
+    # are we changing dataset versions?
+    if len(gv_SetVers) > 0:
+        for apath in DirList:
+            newpath = setVersion(apath,gv_SetVers)
+            if len(newpath):
+                print(f'{newpath}')
+
+        sys.exit(0)
 
     # set status string extension to gv_Setstat
     if (Limited or gv_Force) and len(gv_Setstat) > 0:
@@ -330,8 +390,10 @@ def main():
             if not os.path.exists(adir):
                 print(f'WARNING: no such path: {adir}')
                 continue
-            print(f'set stat {gv_Setstat} for dir {adir}')
-            set_vpath_statusspec(adir,gv_Setstat)
+            # print(f'set stat {gv_Setstat} for dir {adir}')
+            newpath = set_vpath_statusspec(adir,gv_Setstat)
+            if len(newpath):
+                print(f'{newpath}')
     
     sys.exit(0)
 
