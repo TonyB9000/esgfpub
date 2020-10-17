@@ -75,6 +75,26 @@ def get_dsid_type_key( dsid ):
 def dataset_print_csv( akey, dkey ):
     print(f'{akey[0]},{akey[1]},{akey[2]},{dkey}')
 
+def get_leafdirs(rootpath,mode):     # mode == "any" (default), or "empty" or "nonempty"
+    selected = []
+    for root, dirs, files in os.walk(rootpath):
+        if not dirs:
+            selected.append(root)
+    if not (mode == 'empty' or mode == 'nonempty'):  # "any"
+        return selected
+
+    sel_empty = []
+    sel_nonempty = []
+    for adir in selected:
+        for root, dirs, files in os.walk(adir):
+            if files:
+                sel_nonempty.append(adir)
+            else:
+                sel_empty.append(adir)
+    if mode == 'empty':
+        return sel_empty
+    return sel_nonempty
+
 
 print_paths = True
 
@@ -82,13 +102,7 @@ def main():
 
     # assess_args()
 
-    src_selected = []
-    for root, dirs, files in os.walk(warehouse):      # aggregate full sourcefile paths in src_selected
-        if not dirs:     # at leaf-directory matching src_selector
-            src_selected.append(root)
-            #for afile in files:
-            #    src_selected.append(os.path.join(root,afile))
-
+    src_selected = get_leafdirs(warehouse,'any')
     wh_nonempty = []
     for adir in src_selected:
         # print(adir)
@@ -99,7 +113,16 @@ def main():
             if files:
                 wh_nonempty.append( tuple([adir,os.path.basename(adir),len(files)]))
 
-    # print(f'Processed { len(wh_nonempty) } non-empty directories')
+
+    '''
+    for dir in wh_nonempty:
+        print(f'{dir}')
+
+    sys.exit(0)
+    '''
+
+
+    # print(f'Processing { len(wh_nonempty) } non-empty directories')
 
     idvals = []
     akeys = []
@@ -122,10 +145,11 @@ def main():
         akey = get_dsid_arch_key(idval)
         dkey = get_dsid_type_key(idval)
         vcode = idval.split('.')[-1]
+        vcode = vcode[0:2]
         akeys.append(akey)
         dkeys.append(dkey)
         vcodes.append(vcode)
-        # print(f'    {akey} : {dkey} : {vcode}')
+        # print(f'    {akey} | {dkey} | {vcode}')
 
     akeys = list(set(akeys))
     dkeys = list(set(dkeys))
@@ -147,6 +171,7 @@ def main():
         akey = get_dsid_arch_key(idval)
         dkey = get_dsid_type_key(idval)
         vcode = idval.split('.')[-1]
+        vcode = vcode[0:2]
         if vcode in dataset_status[akey][dkey]:
             print(f'    vcode:{vcode} already given for {akey} : {dkey}')
         dataset_status[akey][dkey].append(vcode)
