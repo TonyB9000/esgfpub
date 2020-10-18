@@ -5,11 +5,8 @@ import glob
 import shutil
 import subprocess
 import time
+from datetime import datetime
 
-
-# 
-def ts():
-    return 'TS_' + datetime.now().strftime('%Y%m%d_%H%M%S')
 
 
 helptext = '''
@@ -47,10 +44,19 @@ helptext = '''
 
 gv_WH_root = '/p/user_pub/e3sm/staging/prepub'
 gv_PUB_root = '/p/user_pub/work/E3SM'
+gv_MapGenPath = '/p/user_pub/e3sm/bartoletti1/Pub_Work/2_Mapwork'
+gv_MapGenProc = '/p/user_pub/e3sm/bartoletti1/Pub_Work/2_Mapwork/multi_mapfile_publish.sh'
+
 
 gv_PubList = ''
 gv_Force = False
 
+
+def ts():
+    return 'TS_' + datetime.now().strftime('%Y%m%d_%H%M%S')
+
+def ts_only():
+    return datetime.now().strftime('%Y%m%d_%H%M%S')
 
 def assess_args():
     global gv_PubList
@@ -112,11 +118,11 @@ def isVLeaf(_):
         return True
     return False
 
-def set_vpath_statusspec(apath,statspec):
+def set_vpath_statusspec(apath,statspec,force):
     head, tail = os.path.split(apath)
 
     if not isVLeaf(tail):
-        print(f'WARNING: Not VLeaf: {apath}')
+        print(f'{ts()}:WARNING: Not VLeaf: {apath}')
         return ''
 
     spos = 0    # generalize
@@ -128,8 +134,8 @@ def set_vpath_statusspec(apath,statspec):
     else:
         stat_part = tailparts[1]
 
-    if (stat_part == '' or stat_part[spos] == vstatcode['hold'] or stat_part[spos] == vstatcode['working']) and not gv_Force:
-        print(f'WARNING: set_vpath_statusspec precluded without -f (force)')
+    if (stat_part == '' or stat_part[spos] == vstatcode['hold'] or stat_part[spos] == vstatcode['working']) and not force:
+        print(f'{ts()}:WARNING: set_vpath_statusspec precluded without -f (force)')
         return ''
 
     if stat_part == '':
@@ -140,7 +146,7 @@ def set_vpath_statusspec(apath,statspec):
     newtail = ':'.join([vers_part,stat_part])
     newpath = os.path.join(head,newtail)
 
-    print(f' renaming {apath} to {newpath}')
+    print(f'{ts()}:INFO: renaming {apath} to {newpath}')
     os.rename(apath,newpath)
     return newpath
 
@@ -148,14 +154,14 @@ def get_vpath_status(apath):
     head, tail = os.path.split(apath)
 
     if not isVLeaf(tail):
-        print(f'WARNING: Not VLeaf: {apath}')
-        return -1
+        print(f'{ts()}:WARNING: Not VLeaf: {apath}')
+        return ''
 
     tailparts = tail.split(':')
 
     if len(tailparts) > 1:
-    stat_part = tailparts[1]
-    stat_code = stat_part[0]
+        stat_part = tailparts[1]
+        stat_code = stat_part[0]
 
     stat_keys = [k for k,v in vstatcode.items() if v == statcode]
     return stat_keys[0]
@@ -185,9 +191,19 @@ def pubVersion(apath):
     vers = int( apath.split('/')[-1][1:2] )
     return vers
 
-def printList(alist):
+def printList(prefix,alist):
+    for _ in alist:
+        print(f'{prefix}{_}')
+
+def printFileList(outfile,alist):
+    stdout_orig = sys.stdout
+    with open(outfile,'w') as f:
+        sys.stdout = f
+
     for _ in alist:
         print(f'{_}')
+
+    sys.stdout = stdout_orig
 
 # /p/user_pub/e3sm/staging/prepub/(curpath.v#P)
 def constructPubPath(wpath):
@@ -195,8 +211,8 @@ def constructPubPath(wpath):
     ppart = '/'.join(wcomps[6:-1])
     tpart = wcomps[-1][0:2]
     ppath = os.path.join(gv_PUB_root,ppart,tpart)
-    print(f'wpath = {wpath}')
-    print(f'ppath = {ppath}')
+    # print(f'wpath = {wpath}')
+    # print(f'ppath = {ppath}')
     return ppath
 
 def trisect(A, B):
@@ -214,35 +230,48 @@ def main():
     # split according to P-status
     PubList, Rejects = filterByStatus(PubList,'P')
     if len(Rejects) > 0:
-        print(f'The following {len(Rejects)} warehouse paths do not have the expected publication status (:P)')
-        print(f'(Use the "warehouse_assign" utility to set the directories to "v#:P" status)')
-        printList(Rejects)
+        print(f'{ts()}:WARNING: The following {len(Rejects)} warehouse paths do not have the expected publication status (:P)')
+        print(f'{ts()}:WARNING: (Use the "warehouse_assign" utility to set the directories to "v#:P" status)')
+        printList('REJECTED:',Rejects)
 
     p_success = []
     w_success = []
     for wpath in PubList:
+        if not os.path.exists(wpath):
+            print(f'{ts()}:WARNING: Skipping warehouse path: not found')
+            print(f'REJECTED:{wpath}')
+            continue
+
         ver = pubVersion(wpath)
         if ver < 1 or ver > 9:
-            print(f'WARNING: Skipping warehouse path: cannot publish version v0 dataset')
-            print(f'    {wpath}')
+            print(f'{ts()}:WARNING: Skipping warehouse path: cannot publish version v0 dataset')
+            print(f'REJECTED:{wpath}')
             continue
-        # tpath = set_vpath_statusspec(wpath,'~')
-        # if len(tpath) == 0
-        #    continue
-        # wpath = tpath
-        _, _, wfilenames = walk(wpath).next()
+
+        tpath = set_vpath_statusspec(wpath,'~',gv_Force)
+        if len(tpath) == 0:
+            print(f'{ts()}:WARNING: Could not set directory to working status')
+            print(f'REJECTED:{wpath}')
+            continue
+        wpath = tpath
+
+        wfilenames = [files for _, _, files in os.walk(wpath)][0]
+        wfilenames.sort()
         wcount = len(wfilenames)
+        print(f'{ts()}:INFO: Processing: {wcount} files: {wpath}')
+
         pcount = 0
         ppath = constructPubPath(wpath)
         if os.path.exists(ppath):
             if any(os.scandir(ppath)):
-                _, _, pfilenames = walk(ppath).next()
+                pfilenames = [files for _, _, files in os.walk(ppath)][0]
+                pfilenames.sort()
                 pcount = len(pfilenames)
                 w_only, p_only, in_both = trisect(set(wfilenames),set(pfilenames))
                 
                 if( len(in_both) > 0 ):
-                    print(f'WARNING: Skipping warehouse path: existing destination has {len(in_both)} matching files by name')
-                    print(f'    {wpath}')
+                    print(f'{ts()}:WARNING: Skipping warehouse path: existing destination has {len(in_both)} matching files by name')
+                    print(f'REJECTED:{wpath}')
                     continue
         else:
             os.makedirs(ppath,exist_ok=True)
@@ -254,32 +283,34 @@ def main():
             shutil.move(src,dst)
             os.chmod(dst,0o664)
 
-        _, _, pfilenames = walk(ppath).next()
+        pfilenames = [files for _, _, files in os.walk(ppath)][0]
+        pfilenames.sort()
         finalpcount = len(pfilenames)
         if not finalpcount == (pcount + wcount):
-            print(f'WARNING: Discrepency in filecounts:  pub_original={pcount}, pub_warehouse={wcount}, pub_final={pcount+wcount}')
-            print(f'    {wpath}')
+            print(f'{ts()}:WARNING: Discrepency in filecounts:  pub_original={pcount}, pub_warehouse={wcount}, pub_final={pcount+wcount}')
+            print(f'{ts()}:WARNING: {wpath}')
             continue
 
-        wpath = set_vpath_statusspec(wpath,'X')
+        print(f'{ts()}:INFO: Moved {wcount} files to {ppath}')
+        wpath = set_vpath_statusspec(wpath,'X',True)
         w_success.append(wpath)
         p_success.append(ppath)
     
-    printList(p_success)
+    print(f'{ts()}:INFO: Moved {len(p_success)} datasets to publishing:')
+    printList('',p_success)
         
-    
-    sys.exit(0)
 
     '''
-    # set status string extension to gv_Setstat
-    if (Limited or gv_Force) and len(gv_Setstat) > 0:
-        for adir in DirList:
-            if not os.path.exists(adir):
-                print(f'WARNING: no such path: {adir}')
-                continue
-            print(f'set stat {gv_Setstat} for dir {adir}')
-            set_vpath_statusspec(adir,gv_Setstat)
+        We launch a detached background "mapfile-publish" job right here and exit.
+        The "p_success" list has the publication paths we write to a file as input.
     '''
+
+    # creat a file in the map-publish directory containing the successful publish paths
+    mapjobfile = 'map_publish_job-' + ts_only()
+    mapjobpath = os.path.join(gv_MapGenPath,mapjobfile)
+    printFileList(mapjobpath,p_success)
+
+    os.system(f'nohup python {gv_MapGenProc} {mapjobpath} &')
     
     sys.exit(0)
 

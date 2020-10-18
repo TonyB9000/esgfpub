@@ -217,7 +217,7 @@ def isVLeaf(_):
         return True
     return False
 
-def set_vpath_statusspec(apath,statspec):
+def set_vpath_statusspec(apath,statspec,force):
     head, tail = os.path.split(apath)
 
     if not isVLeaf(tail):
@@ -233,7 +233,7 @@ def set_vpath_statusspec(apath,statspec):
     else:
         stat_part = tailparts[1]
 
-    if (stat_part == '' or stat_part[spos] == vstatcode['hold'] or stat_part[spos] == vstatcode['working']) and not gv_Force:
+    if (stat_part == '' or stat_part[spos] == vstatcode['hold'] or stat_part[spos] == vstatcode['working']) and not force:
         print(f'WARNING: set_vpath_statusspec precluded without -f (force)')
         return ''
 
@@ -259,8 +259,8 @@ def get_vpath_status(apath):
     tailparts = tail.split('.')
 
     if len(tailparts) > 1:
-    stat_part = tailparts[1]
-    stat_code = stat_part[0]
+        stat_part = tailparts[1]
+        stat_code = stat_part[0]
 
     stat_keys = [k for k,v in vstatcode.items() if v == statcode]
     return stat_keys[0]
@@ -391,7 +391,7 @@ def main():
                 print(f'WARNING: no such path: {adir}')
                 continue
             # print(f'set stat {gv_Setstat} for dir {adir}')
-            newpath = set_vpath_statusspec(adir,gv_Setstat)
+            newpath = set_vpath_statusspec(adir,gv_Setstat,gv_Force)
             if len(newpath):
                 print(f'{newpath}')
     
