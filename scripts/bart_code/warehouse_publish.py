@@ -200,10 +200,10 @@ def printFileList(outfile,alist):
     with open(outfile,'w') as f:
         sys.stdout = f
 
-    for _ in alist:
-        print(f'{_}')
+        for _ in alist:
+            print(f'{_}',flush=True)
 
-    sys.stdout = stdout_orig
+        sys.stdout = stdout_orig
 
 # /p/user_pub/e3sm/staging/prepub/(curpath.v#P)
 def constructPubPath(wpath):
@@ -305,12 +305,13 @@ def main():
         The "p_success" list has the publication paths we write to a file as input.
     '''
 
-    # creat a file in the map-publish directory containing the successful publish paths
+    # create a file in the map-publish directory containing the successful publish paths
+
     mapjobfile = 'map_publish_job-' + ts_only()
     mapjobpath = os.path.join(gv_MapGenPath,mapjobfile)
     printFileList(mapjobpath,p_success)
 
-    os.system(f'nohup python {gv_MapGenProc} {mapjobpath} &')
+    os.system(f'nohup {gv_MapGenProc} {mapjobpath} &')
     
     sys.exit(0)
 
