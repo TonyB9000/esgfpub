@@ -8,7 +8,12 @@ dataset_fullpath=$1
 ts=`date +%Y%m%d.%H%M%S`
 
 echo "TS_$ts:INFO: make_mapfile: processing: $dataset_fullpath"
+
+#conda init bash
+source ~/anaconda3/etc/profile.d/conda.sh
+conda activate pub
 esgmapfile make --debug -i /p/user_pub/e3sm/staging/ini_std/ --max-processes 20 --project e3sm --outdir /p/user_pub/e3sm/staging/mapfiles/mapfiles_auto_publish $dataset_fullpath
+conda deactivate
 
 exit $?
 

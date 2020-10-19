@@ -7,7 +7,8 @@ if [ $# -ne 1 ]; then
 	exit 1
 fi
 
-pub_paths=$1
+pub_paths_file=$1
+pub_paths=`cat $pub_paths_file`
 
 startTime=`date +%s`
 
