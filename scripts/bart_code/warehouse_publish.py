@@ -277,11 +277,25 @@ def main():
             os.makedirs(ppath,exist_ok=True)
             os.chmod(ppath,0o775)
 
+        broken = False
         for wfile in wfilenames:
             src = os.path.join(wpath,wfile)
             dst = os.path.join(ppath,wfile)
-            shutil.move(src,dst)
-            os.chmod(dst,0o664)
+            try:
+                shutil.move(src,dst)
+            except shutil.Error:
+                print(f'{ts()}:WARNING: shutil - cannot move file: {wfile}')
+                print(f'REJECTED:{wpath}')
+                broken = True
+                break
+
+            try:
+                os.chmod(dst,0o664)
+            except:
+                pass
+
+        if broken:
+            continue
 
         pfilenames = [files for _, _, files in os.walk(ppath)][0]
         pfilenames.sort()
