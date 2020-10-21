@@ -104,10 +104,10 @@ def main():
     utcStart = time.time()
     runlog = 'psc_log-' + ts()
 
+    assess_args()
+
     sys.stdout = open(runlog,"w")
     sys.stderr = sys.stdout
-
-    assess_args()
 
     with open(AM_selected) as f:
         contents = f.read().split('\n')
@@ -144,6 +144,7 @@ def main():
                                 archspec['ensem'], \
                                 jobset['pubversion'])
 
+        utcS = time.time()
         print(f'{ts()}: Calling: python archive_publication_stager.py to produce {pub_path}', flush=True)
 
         cmd = ['python', 'archive_publication_stager.py', '-A', archspec["apath"], '-P', archspec["apatt"], '-D', pub_path, '-O']
@@ -156,6 +157,9 @@ def main():
         proc_err = proc_err.decode("utf-8")
         print(f'{proc_out}',flush=True)
         print(f'{proc_err}',flush=True)
+        utcF = time.time()
+        set_et = utcF - utcS
+        print(f'{ts()}: stager ET: {set_et} seconds',flush=True)
 
     
     print(f'{ts()}: Completion: Processed {arch_count} archive map lines.',flush=True)
