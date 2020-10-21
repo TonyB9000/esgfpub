@@ -41,9 +41,9 @@ DECK-v1,1_0,amip,ens3,/p/user_pub/e3sm/archive/1_0/DECK-v1/20180716.DECKv1b_A3.n
 DECK-v1,1_0,damip_hist-GHG,ens1,/p/user_pub/e3sm/archive/1_0/DECK-v1/20190404.DECKv1b_H1_hist-GHG.ne30_oEC.edison
 DECK-v1,1_0,damip_hist-GHG,ens2,/p/user_pub/e3sm/archive/1_0/DECK-v1/20190404.DECKv1b_H2_hist-GHG.ne30_oEC.edison
 DECK-v1,1_0,damip_hist-GHG,ens3,/p/user_pub/e3sm/archive/1_0/DECK-v1/20190404.DECKv1b_H3_hist-GHG.ne30_oEC.edison
-DECK-v1,1_0,damip_SSP5-8_5-GHG,ens1,/p/user_pub/e3sm/archive/1_0/DECK-v1/20191019.DECKv1b_P1_SSP5-8.5-GHG.ne30_oEC.cori-knl
-DECK-v1,1_0,damip_SSP5-8_5-GHG,ens2,/p/user_pub/e3sm/archive/1_0/DECK-v1/20191019.DECKv1b_P2_SSP5-8.5-GHG.ne30_oEC.cori-knl
-DECK-v1,1_0,damip_SSP5-8_5-GHG,ens3,/p/user_pub/e3sm/archive/1_0/DECK-v1/20191019.DECKv1b_P3_SSP5-8.5-GHG.ne30_oEC.cori-knl
+DECK-v1,1_0,damip_SSP585-GHG,ens1,/p/user_pub/e3sm/archive/1_0/DECK-v1/20191019.DECKv1b_P1_SSP5-8.5-GHG.ne30_oEC.cori-knl
+DECK-v1,1_0,damip_SSP585-GHG,ens2,/p/user_pub/e3sm/archive/1_0/DECK-v1/20191019.DECKv1b_P2_SSP5-8.5-GHG.ne30_oEC.cori-knl
+DECK-v1,1_0,damip_SSP585-GHG,ens3,/p/user_pub/e3sm/archive/1_0/DECK-v1/20191019.DECKv1b_P3_SSP5-8.5-GHG.ne30_oEC.cori-knl
 DECK-v1,1_0,historical,ens1,/p/user_pub/e3sm/archive/1_0/DECK-v1/20180215.DECKv1b_H1.ne30_oEC.edison
 DECK-v1,1_0,historical,ens2,/p/user_pub/e3sm/archive/1_0/DECK-v1/20180220.DECKv1b_H2.ne30_oEC.edison
 DECK-v1,1_0,historical,ens3,/p/user_pub/e3sm/archive/1_0/DECK-v1/20180302.DECKv1b_H3.ne30_oEC.edison
