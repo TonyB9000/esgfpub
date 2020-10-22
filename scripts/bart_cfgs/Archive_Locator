@@ -29,6 +29,7 @@ CRYO-v1,1_2,G-IAF,ens1,/p/user_pub/e3sm/archive/1_2/CRYO-v1/20190923.GMPAS-IAF.T
 CRYO-v1,1_3,G-IAF-DIB-ISMF-3dGM,ens1,/p/user_pub/e3sm/archive/1_3/CRYO-v1/20190819.GMPAS-DIB-IAF-ISMF.T62_oEC60to30v3wLI.cori-knl.testNewGM
 DECK-v1,1_0,1pctCO2,ens1,/p/user_pub/e3sm/archive/1_0/DECK-v1/20180215.DECKv1b_1pctCO2.ne30_oEC.edison
 DECK-v1,1_0,abrupt-4xCO2,ens1,/p/user_pub/e3sm/archive/1_0/DECK-v1/20180215.DECKv1b_abrupt4xCO2.ne30_oEC.edison
+DECK-v1,1_0,abrupt-4xCO2-ext300yrs,ens1,/p/user_pub/e3sm/archive/1_0/20190722.DECKv1b_abrupt4xCO2.ne30_oEC3.compy
 DECK-v1,1_0,amip_1850_aeroF,ens1,/p/user_pub/e3sm/archive/1_0/DECK-v1/20180508.DECKv1b_A1_1850aeroF.ne30_oEC.edison
 DECK-v1,1_0,amip_1850_aeroF,ens2,/p/user_pub/e3sm/archive/1_0/DECK-v1/20180622.DECKv1b_A2_1850aeroF.ne30_oEC.edison
 DECK-v1,1_0,amip_1850_aeroF,ens3,/p/user_pub/e3sm/archive/1_0/DECK-v1/20180716.DECKv1b_A3_1850aeroF.ne30_oEC.edison
