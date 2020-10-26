@@ -682,7 +682,7 @@ DECK-v1,1_0,projection,ens3,atm_nat_day_cosp,/p/user_pub/e3sm/archive/1_0/DECK-v
 DECK-v1,1_0,projection,ens3,atm_nat_day,/p/user_pub/e3sm/archive/1_0/DECK-v1/20190821.DECKv1b_P3_SSP5-8.5.ne30_oEC.cori-knl,archive/atm/hist/*cam.h1*
 DECK-v1,1_0,projection,ens3,atm_nat_mon,/p/user_pub/e3sm/archive/1_0/DECK-v1/20190821.DECKv1b_P3_SSP5-8.5.ne30_oEC.cori-knl,archive/atm/hist/*cam.h0*
 DECK-v1,1_0,projection,ens3,lnd_nat_mon,/p/user_pub/e3sm/archive/1_0/DECK-v1/20190821.DECKv1b_P3_SSP5-8.5.ne30_oEC.cori-knl,archive/lnd/hist/*clm2.h0*
-DECK-v1,1_0,projection,ens3,ocn_namefile_fixed,/p/user_pub/e3sm/archive/1_0/DECK-v1/20190821.DECKv1b_P3_SSP5-8.5.ne30_oEC.cori-kn,run/mpaso_inl
+DECK-v1,1_0,projection,ens3,ocn_namefile_fixed,/p/user_pub/e3sm/archive/1_0/DECK-v1/20190821.DECKv1b_P3_SSP5-8.5.ne30_oEC.cori-knl,run/mpaso_in
 DECK-v1,1_0,projection,ens3,ocn_nat_5day_snap,/p/user_pub/e3sm/archive/1_0/DECK-v1/20190821.DECKv1b_P3_SSP5-8.5.ne30_oEC.cori-knl,archive/ocn/hist/mpaso.hist.am.highFrequencyOutput.*
 DECK-v1,1_0,projection,ens3,ocn_nat_mon,/p/user_pub/e3sm/archive/1_0/DECK-v1/20190821.DECKv1b_P3_SSP5-8.5.ne30_oEC.cori-knl,archive/ocn/hist/mpaso.hist.am.timeSeriesStatsMonthly.*
 DECK-v1,1_0,projection,ens3,ocn_restart_fixed,/p/user_pub/e3sm/archive/1_0/DECK-v1/20190821.DECKv1b_P3_SSP5-8.5.ne30_oEC.cori-knl,archive/rest/2020-01-01-00000/mpaso.rst.2020-01-01_00000.nc
@@ -714,7 +714,7 @@ DECK-v1,1_0,projection,ens5,atm_nat_day_cosp,/p/user_pub/e3sm/archive/1_0/DECK-v
 DECK-v1,1_0,projection,ens5,atm_nat_day,/p/user_pub/e3sm/archive/1_0/DECK-v1/20190821.DECKv1b_P5_SSP5-8.5.ne30_oEC.cori-knl,archive/atm/hist/*cam.h1*
 DECK-v1,1_0,projection,ens5,atm_nat_mon,/p/user_pub/e3sm/archive/1_0/DECK-v1/20190821.DECKv1b_P5_SSP5-8.5.ne30_oEC.cori-knl,archive/atm/hist/*cam.h0*
 DECK-v1,1_0,projection,ens5,lnd_nat_mon,/p/user_pub/e3sm/archive/1_0/DECK-v1/20190821.DECKv1b_P5_SSP5-8.5.ne30_oEC.cori-knl,archive/lnd/hist/*clm2.h0*
-DECK-v1,1_0,projection,ens5,ocn_namefile_fixed,/p/user_pub/e3sm/archive/1_0/DECK-v1/20190821.DECKv1b_P5_SSP5-8.5.ne30_oEC.cori-kn,run/mpaso_inl
+DECK-v1,1_0,projection,ens5,ocn_namefile_fixed,/p/user_pub/e3sm/archive/1_0/DECK-v1/20190821.DECKv1b_P5_SSP5-8.5.ne30_oEC.cori-knl,run/mpaso_in
 DECK-v1,1_0,projection,ens5,ocn_nat_5day_snap,/p/user_pub/e3sm/archive/1_0/DECK-v1/20190821.DECKv1b_P5_SSP5-8.5.ne30_oEC.cori-knl,archive/ocn/hist/mpaso.hist.am.highFrequencyOutput.*
 DECK-v1,1_0,projection,ens5,ocn_nat_mon,/p/user_pub/e3sm/archive/1_0/DECK-v1/20190821.DECKv1b_P5_SSP5-8.5.ne30_oEC.cori-knl,archive/ocn/hist/mpaso.hist.am.timeSeriesStatsMonthly.*
 DECK-v1,1_0,projection,ens5,ocn_restart_fixed,/p/user_pub/e3sm/archive/1_0/DECK-v1/20190821.DECKv1b_P5_SSP5-8.5.ne30_oEC.cori-knl,archive/rest/2020-01-01-00000/mpaso.rst.2020-01-01_00000.nc
