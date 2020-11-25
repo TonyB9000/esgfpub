@@ -1,0 +1,37 @@
+ 
+transitions:
+    TimeUnitCheck:Ready:
+        TimeUnitCheck:Engaged     # (modulo "global" conditions such as Hold, or TimeUnitCheck:Blocked)
+    TimeUnitCheck:Pass:
+        TimeCheck:Ready
+    TimeUnitCheck:Fail:
+        TimeIndexFix:Ready
+ 
+    TimeIndexFix:Ready:
+        TimeIndexFix:Engaged      # (modulo "global" conditions such as Hold, or TimeIndexFix:Blocked)
+    TimeIndexFix:Pass:
+        TimeCheck:Ready
+    TimeIndexFix:Fail:
+        Exit:exit_code            # (should set "Hold:process=exit_code"?)
+ 
+    TimeCheck:Ready:
+        TimeCheck:Engaged         # (modulo "global" conditions such as Hold, or TimeCheck:Blocked)
+    TimeCheck:Pass:
+        ZerosCheck:Ready
+    TimeCheck:Fail:
+        TimeRectify:Ready
+ 
+    TimeRectify:Ready:
+        TimeRectify:Engaged       # (modulo "global" conditions such as Hold, or TimeRectify:Blocked)
+    TimeRectify:Pass:
+        ZerosCheck:Ready
+    TimeRectify:Fail:
+        Exit:exit_code            # (should set "Hold:process=exit_code"?)
+ 
+    ZerosCheck:Ready:
+        ZerosCheck:Engaged        # (modulo "global" conditions such as Hold, or ZerosCheck:Blocked )
+    ZerosCheck:Pass:
+        Exit:Success
+    ZerosCheck:Fail:
+        Exit:exit_code            # (should set "Hold:process=exit_code"?)
+ 

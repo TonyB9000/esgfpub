@@ -1,0 +1,37 @@
+
+transitions:
+    Extraction:Ready:
+        Extraction:Engaged    # (modulo "global" conditions such as Hold, or Extraction:Blocked)
+    Extraction:Pass:
+        Validation:Ready
+    Extraction:Fail:
+        Exit:exit_code        # (should set "Hold:exit_code")
+ 
+    Validation:Ready:
+        Validation:Engaged    # (modulo "global" conditions such as Hold, or Validation:Blocked)
+    Validation:Pass:
+        PostProcess:Ready
+    Validation:Fail:
+        Exit:exit_code        # (should set "Hold:exit_code")
+ 
+    PostProcess:Ready:
+        PostProcess:Engaged   # (modulo "global" conditions such as Hold, or PostProcess:Blocked)
+    PostProcess:Pass:
+        Publication:Ready
+    PostProcess:Fail:
+        Exit:exit_code        # (should set "Hold:exit_code")
+ 
+    Publication:Ready:
+        PostProcess:Engaged   # (modulo "global" conditions such as Hold, or Publication:Blocked)
+    Publication:Pass:
+        CleanUp:Ready
+    Publication:Fail:
+        Exit:exit_code        # (should set "Hold:exit_code")
+ 
+    CleanUp:Ready:
+        CleanUp:Engaged       # (modulo "global" conditions such as Hold, or Publication:Blocked)
+    CleanUp:Pass:
+        Completion            # (archive this statfile)
+    CleanUp:Fail:
+        Exit:exit_code        # (should set "Hold:exit_code")
+ 
