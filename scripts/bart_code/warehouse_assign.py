@@ -512,7 +512,7 @@ DS_Status: dictionary
     { dkey:
         { 'PATH': ‘ensemble path’,
           'VDIR': { dict of 'vdir': filecount, 'vdir': filecount, ...},
-          'STAT': [<list of 'timestamp:section:statline...' text lines],
+          'STAT': {<dict of <SECTION>: [list of (timestamp:status)... tuples],}
           'COMM': [<list of text lines>]
         },
       dkey:
@@ -639,16 +639,6 @@ def rmpath_onlyto(apath):
         head, tail = os.path.split(apath)
         os.system('rm -rf ' + apath)
         apath = head
-
-vstatcode = { 'free': '-', 'hold': '^', 'working': '~', 'toss': 'X', 'pub_ready': 'p', 'publish': 'P' }
-
-# informational
-#   free        ready for any processing indicated by subsequent codes
-#   hold        DO NOT process (except by specific "force" command)
-#   working     directory is being processed - do not interfere (like "hold" but assumed temporary)
-#   toss        Directory may be deleted (necessary?  Why not just delete?)
-#   pub_ready   "pristine" dataset, awaiting publication suthorization
-#   publish     Publish-seeking process may grab and publish.
 
 
 def filterByStatus(dlist,instat):
@@ -787,50 +777,6 @@ def main():
 
     sys.exit(0)
 
-
-    # if we need to read status
-    wh_datasets = load_DS_Status(EnsDirs)
-
-    sys.exit(0)
-
-
-
-    Limited = False
-    if len(gv_SelectionFile) > 0:
-        Limited = True
-        with open(gv_SelectionFile,"r") as f:
-            EnsDirs = f.read().split('\n')
-        EnsDirs = [ _ for _ in EnsDirs if _[:-1] ]
-    else:
-        EnsDirs = get_vdirs(gv_WH_root,'any')
-
-    '''
-    print(f'Limited = {Limited}')
-    print(f'gv_Setstat = {gv_Setstat}')
-    printList(EnsDirs)
-    sys.exit(0)
-    '''
-    # are we changing dataset versions?
-    if len(gv_SetVers) > 0:
-        for apath in EnsDirs:
-            newpath = setVersion(apath,gv_SetVers)
-            if len(newpath):
-                print(f'{newpath}')
-
-        sys.exit(0)
-
-    # set status string extension to gv_Setstat
-    if (Limited or gv_Force) and len(gv_Setstat) > 0:
-        for adir in EnsDirs:
-            if not os.path.exists(adir):
-                print(f'WARNING: no such path: {adir}')
-                continue
-            # print(f'set stat {gv_Setstat} for dir {adir}')
-            newpath = set_vpath_statusspec(adir,gv_Setstat,gv_Force)
-            if len(newpath):
-                print(f'{newpath}')
-    
-    sys.exit(0)
 
 if __name__ == "__main__":
   sys.exit(main())

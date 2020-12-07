@@ -17,35 +17,8 @@ def ts(prefix):
 
 
 helptext = '''
-    The warehouse_publish utility accepts a warehouse directory listing file "--publist file".
+    The warehouse_publish utility accepts a warehouse ensemble directory listing file "--publist file".
 
-    For each listed path, it will:
-
-    1.  check that each path ends with "v#:P", where # in {1 - 9} (else WARNS of path and skips)
-        (Use the "warehouse_assign" utility to set the directories to "v#:P" status)
-
-    2.  temporarily changes the directory warehouse status to "working" (v#:~)
-    3.  creates a path below E3SM_Publish,
-
-            /p/user_pub/work/E3SM/(newpath/v#)
-
-        matching the existing path below the warehouse
-
-            /p/user_pub/e3sm/staging/prepub/(curpath/v#:P)
-
-        If the path already exists but is not empty, the corresponding file lists are compared.
-        If they intersect, a warning is issued, and this path is skipped (need "overwrite" flag).
-
-    4.  count the files in the warehouse path
-    5.  move the files from warehouse to publication
-    6.  recount files in publication to ensure the counts match
-        (if ok, change status to v#:X indicating 'ok to delete)
-        (if not, leave in 'working' state, issue warning message and move on to next path)
-
-    The list of (publication) paths that passed the above gauntlet intact are then passed to
-    a publication-process that takes the given list and runs the mapfile and publish for each.
-
-    Any warehouse paths that fail the above gauntlet are not published and are left in the "working" state.
  
 '''
 
