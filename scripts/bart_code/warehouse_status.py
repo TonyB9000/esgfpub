@@ -13,7 +13,7 @@ helptext = '''
 
 
 
-gv_WH_root = '/p/user_pub/e3sm/staging/prepub'
+gv_WH_root = '/p/user_pub/e3sm/warehouse/E3SM'
 
 ts=datetime.now().strftime('%Y%m%d_%H%M%S')
 ensem_out = 'warehouse_ensem-' + ts
@@ -87,6 +87,59 @@ def printFileList(outfile,alist):
 
         sys.stdout = stdout_orig
 
+
+
+def get_dataset_dirs_loc(anydir,loc):   # loc in ['P','W']
+    global gv_WH_root
+    global gv_PUB_root
+
+    '''
+        Return tuple (ensemblepath,[version_paths])
+        for the dataset indicated by "anydir" whose
+        "dataset_id" part identifies a dataset, and
+        whose root part is warehouse or publication.
+    '''
+
+    if not loc in ['P','W']:
+        logMessage('ERROR',f'invalid dataset location indicator:{loc}')
+        return ''
+    if not (gv_WH_root in anydir or gv_PUB_root in anydir):
+        logMessage('ERROR',f'invalid dataset source path:{anydir}')
+        return ''
+    if gv_WH_root in anydir:
+        ds_part = anydir[1+len(gv_WH_root):]
+    else:
+        ds_part = anydir[1+len(gv_PUB_root):]
+
+    tpath, leaf = os.path.split(ds_part)
+    if len(leaf) == 0:
+        tpath, leaf = os.path.split(tpath)
+    if leaf[0] == 'v' and leaf[1] in '123456789':
+        tpath, leaf = os.path.split(tpath)
+        if not (leaf[0:3] == 'ens' and leaf[3] in '123456789'):
+            logMessage('ERROR',f'invalid dataset source path:{anydir}')
+            return ''
+        ens_part = os.path.join(tpath,leaf)
+    elif (leaf[0:3] == 'ens' and leaf[3] in '123456789'):
+        ens_part = os.path.join(tpath,leaf)
+    else:
+        logMessage('ERROR',f'invalid dataset source path:{anydir}')
+        return ''
+
+    if loc == 'P':
+        a_enspath = os.path.join(gv_PUB_root, ens_part)
+    else:
+        a_enspath = os.path.join(gv_WH_root, ens_part)
+
+    vpaths = []
+    if os.path.exists(a_enspath):
+        vpaths = [ f.path for f in os.scandir(a_enspath) if f.is_dir() ]      # use f.path for the fullpath
+        vpaths.sort()
+
+    return a_enspath, vpaths
+
+
+
 # Warehouse Specific Functions ==============================
 
 
@@ -144,7 +197,7 @@ def get_dsid_type_key( dsid ):
 
 # dsid:  root,model,experiment.resolution. ... .realm.grid.otype.ens.vcode
 
-def get_idval(ensdir):
+def get_dsid(ensdir):
     return '.'.join(ensdir.split('/')[5:])
 
 def get_vdirs(rootpath,mode):     # mode == "any" (default), or "empty" or "nonempty"
@@ -275,7 +328,7 @@ def load_DatasetStatus(edir):
 def load_DS_StatusList(ensdirs):
     wh_status = {}
     for edir in ensdirs:
-        idval = get_idval(edir)
+        idval = get_dsid(edir)
         akey = get_dsid_arch_key(idval)
         dkey = get_dsid_type_key(idval)
         if not akey in wh_status:

@@ -22,7 +22,7 @@ helptext = '''
     removal of directories no longer needed in the warehouse.
 
     Options:
-        --rootpath                  Override default warehouse /p/user_pub/e3sm/staging/prepub
+        --rootpath                  Override default warehouse /p/user_pub/e3sm/warehouse/E3SM
         -w, --warehouse-paths       File of selected warehouse leaf or ensemble directories upon which to operate.
                                     (Leaf directories will be reduced to their ensemble directories)
                                     (-w is unnecessary with the -l --listpaths or -g --getstatus options)
@@ -87,7 +87,7 @@ valid_subprocess = ['EXTRACTION','VALIDATION','POSTPROCESS','PUBLICATION','EVICT
 valid_substatus  = ['Hold','Free','Ready','Blocked','Unblocked','Engaged','Returned']
 status_binaries = { 'Hold':'Free', 'Free':'Hold', 'Lock':'Unlock', 'Unlock':'Lock', 'Blocked':'Unblocked', 'Unblocked':'Blocked', 'Engaged':'Returned', 'Returned':'Engaged' }
 
-gv_WH_root = '/p/user_pub/e3sm/staging/prepub'
+gv_WH_root = '/p/user_pub/e3sm/warehouse/E3SM'
 gv_PUB_root = '/p/user_pub/work/E3SM'
 
 def validStatus(statspec):
@@ -357,7 +357,7 @@ def get_dsid_type_key( dsid ):
         grid = 'reg'
     return '_'.join([realm,grid,freq])
 
-def get_idval(ensdir):
+def get_dsid(ensdir):
     return '.'.join(ensdir.split('/')[5:])
 
 # Warehouse Specific Functions ==============================
@@ -382,6 +382,55 @@ def get_vdirs(rootpath,mode):     # mode == "any" (default), or "empty" or "none
         return sel_empty
     return sel_nonempty
 
+def get_dataset_dirs_loc(anydir,loc):   # loc in ['P','W']
+    global gv_WH_root
+    global gv_PUB_root
+
+    '''
+        Return tuple (ensemblepath,[version_paths])
+        for the dataset indicated by "anydir" whose
+        "dataset_id" part identifies a dataset, and
+        whose root part is warehouse or publication.
+    '''
+
+    if not loc in ['P','W']:
+        logMessage('ERROR',f'invalid dataset location indicator:{loc}')
+        return ''
+    if not (gv_WH_root in anydir or gv_PUB_root in anydir):
+        logMessage('ERROR',f'invalid dataset source path:{anydir}')
+        return ''
+    if gv_WH_root in anydir:
+        ds_part = anydir[1+len(gv_WH_root):]
+    else:
+        ds_part = anydir[1+len(gv_PUB_root):]
+
+    tpath, leaf = os.path.split(ds_part)
+    if len(leaf) == 0:
+        tpath, leaf = os.path.split(tpath)
+    if leaf[0] == 'v' and leaf[1] in '123456789':
+        tpath, leaf = os.path.split(tpath)
+        if not (leaf[0:3] == 'ens' and leaf[3] in '123456789'):
+            logMessage('ERROR',f'invalid dataset source path:{anydir}')
+            return ''
+        ens_part = os.path.join(tpath,leaf)
+    elif (leaf[0:3] == 'ens' and leaf[3] in '123456789'):
+        ens_part = os.path.join(tpath,leaf)
+    else:
+        logMessage('ERROR',f'invalid dataset source path:{anydir}')
+        return ''
+
+    if loc == 'P':
+        a_enspath = os.path.join(gv_PUB_root, ens_part)
+    else:
+        a_enspath = os.path.join(gv_WH_root, ens_part)
+
+    vpaths = []
+    if os.path.exists(a_enspath):
+        vpaths = [ f.path for f in os.scandir(a_enspath) if f.is_dir() ]      # use f.path for the fullpath
+        vpaths.sort()
+
+    return a_enspath, vpaths
+
 
 def isVLeaf(_):
     if len(_) > 1 and _[0] == 'v' and _[1] in '0123456789':
@@ -393,6 +442,46 @@ def isEnsDir(_):
     if len(_) > 1 and _[0:3] == 'ens' and _[3] in '0123456789':
         return True
     return False
+
+def getWHMaxVersion(enspath):
+    epath, vpaths = get_dataset_dirs_loc(enspath,'W')
+    if len(vpaths):
+        apath, vleaf = os.path.split(vpaths[-1])
+        return vleaf
+    return ''
+
+def getWHMaxVersionPath(enspath):
+    epath, vpaths = get_dataset_dirs_loc(enspath,'W')
+    if len(vpaths):
+        return vpaths[-1]
+    return ''
+
+def getPubCurrVersionPath(enspath):
+    epath, vpaths = get_dataset_dirs_loc(enspath,'P')
+    if len(vpaths):
+        return vpaths[-1]
+    return ''
+
+def getPubNextVersion(enspath):
+    epath, vpaths = get_dataset_dirs_loc(enspath,'P')
+    if len(vpaths) == 0:
+        return 'v1'
+    epath, vleaf = os.path.split(vpaths[-1])
+    vmaxN = vleaf[1]
+    return 'v' + str(int(vmaxN) + 1)
+
+
+def setWHPubVersion(enspath):
+    pubver = getPubNextVersion(enspath)
+    maxwhv = getWHMaxVersion(enspath)
+
+    if len(pubver) and len(maxwhv):
+        srcpath = os.path.join(enspath,maxwhv)
+        dstpath = os.path.join(enspath,pubver)
+        os.rename(srcpath,dstpath)
+    else:
+        print(f'ERROR: cannot rename warehouse paths {maxwhv} to {pubver} for {enspath}')
+
 
 # get a selected subset of warehouse directories
 # if given vdirs, trim to ensemble dirs, regain vdirs in later "datasets" operation.
@@ -457,51 +546,6 @@ def setStatus(edir,statspec):
     statline = f'STAT:{tsval}:{parentName}:{statspec}\n'
     with open(statfile, 'a') as f:
         f.write(statline)
-
-# take a warehouse ensemble directory, locate the version of the highest existing publication version in the publication directories, return (warehouse_ens_dir,v(n+1))
-# if no publication directory exists, return (ens_dir,v1)
-
-def getPubNextVersion(enspath):
-    # trim enspath to id_path if not already (trim off WH_path_root)
-    if not gv_WH_root in enspath:
-        print(f'ERROR:getPubNextVersion:Not a valid warehouse path: {enspath}')
-        return ''
-    idpath = enspath[1+len(gv_WH_root):]
-    pubtestpath = os.path.join(gv_PUB_root,idpath)
-    # print(f'pubtestpath: {pubtestpath}')
-    if not os.path.isdir(pubtestpath):
-        return 'v1'
-    else:
-        vleafs = [ f.name for f in os.scandir(pubtestpath) if f.is_dir() ]      # use f.path for the fullpath
-        vleafs.sort()
-        vmaxN = vleafs[-1][1]
-        return 'v' + str(int(vmaxN) + 1)
-
-def getWHMaxVersion(enspath):
-    # trim enspath to id_path if not already (trim off WH_path_root)
-    if not gv_WH_root in enspath:
-        print(f'ERROR:getWHMaxVersion:Not a valid warehouse path: {enspath}')
-        return ''
-    if not os.path.isdir(enspath):
-        print(f'ERROR:getWHMaxVersion:Not a current warehouse path: {enspath}')
-        return ''
-    else:
-        vleafs = [ f.name for f in os.scandir(enspath) if f.is_dir() ]      # use f.path for the fullpath
-        vleafs.sort()
-        vmax = vleafs[-1]
-        return vmax
-
-def setWHPubVersion(enspath):
-    pubver = getPubNextVersion(enspath)
-    maxwhv = getWHMaxVersion(enspath)
-
-    if len(pubver) and len(maxwhv):
-        srcpath = os.path.join(enspath,maxwhv)
-        dstpath = os.path.join(enspath,pubver)
-        os.rename(srcpath,dstpath)
-    else:
-        print(f'ERROR: cannot rename warehouse paths {maxwhv} to {pubver} for {enspath}')
-
 
 
          
@@ -608,7 +652,7 @@ def status_breakdown(stat_tuples):
 def load_DS_Status(ensdirs):
     wh_status = {}
     for edir in ensdirs:
-        idval = get_idval(edir)
+        idval = get_dsid(edir)
         akey = get_dsid_arch_key(idval)        
         dkey = get_dsid_type_key(idval)        
         if not akey in wh_status:

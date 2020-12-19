@@ -4,7 +4,13 @@ cfg_head="cfg_head"
 cfg_tail="cfg_tail"
 scr_head="scr_head"
 scr_tail="scr_tail"
-experiments=`cat experiments`
+
+sprok=/p/user_pub/e3sm/bartoletti1/abin/sproket-linux-0.2.13
+config=/p/user_pub/e3sm/bartoletti1/Pub_Status/sproket/.sproket_config.json
+
+IFS=$'\n'
+
+experiments=`$sprok -config $config -values.for experiment`
 
 rm -f config*
 rm -f script*
@@ -12,8 +18,6 @@ rm -f output*
 rm -f flagon*
 
 rm -f list_scripts
-
-IFS=$'\n'
 
 for exper in $experiments; do
     # Create custom config

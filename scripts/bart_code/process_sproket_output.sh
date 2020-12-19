@@ -1,8 +1,11 @@
 #!/bin/bash
 
-# Usage:  process_sproket_output.sh  E3SM_datafile_urls-<timestamp>o
+# Usage:  process_sproket_output.sh  E3SM_datafile_urls-<timestamp>
 
-datafile_urls=$1
+sproketdir=/p/user_pub/e3sm/bartoletti1/Pub_Status/sproket/
+
+datafile_urls=`ls $sproketdir | grep E3SM_datafile_urls- | tail -1`
+
 
 ts=`date +%Y%m%d.%H%M%S`
 dataset_paths_full="E3SM_dataset_paths_full-$ts"
@@ -38,9 +41,9 @@ for aline in `cat $dataset_paths_leaf`; do
 		m2=`echo $yearmo2 | cut -c6-7`
 
 		if [ $m2 == "01" ]; then
-			yspan=$((y2 - y1))
+			yspan=$((10#$y2 - 10#$y1))
 		else
-			yspan=$((y2 - y1 + 1))
+			yspan=$((10#$y2 - 10#$y1 + 1))
 		fi
 
 		echo "$yspan,$filecount,$datasetID,$firstfile" >> $publication_report
@@ -56,9 +59,9 @@ for aline in `cat $dataset_paths_leaf`; do
 		m2=`echo $ym_ym | cut -c12-13`
 
 		if [ $m2 == "01" ]; then
-			yspan=$((y2 - y1))
+			yspan=$((10#$y2 - 10#$y1))
 		else
-			yspan=$((y2 - y1 + 1))
+			yspan=$((10#$y2 - 10#$y1 + 1))
 		fi
 
 		echo "$yspan,$filecount,$datasetID,$firstfile" >> $publication_report

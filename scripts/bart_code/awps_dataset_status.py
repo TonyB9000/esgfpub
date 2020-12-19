@@ -23,7 +23,7 @@ helptext = '''
         Existence is determined by:
 
         (A):  Appearance in the Archive_Map (/p/user_pub/e3sm/archive/.cfg/Archive_Map)
-        (W):  The Warehouse directories (/p/user_pub/e3sm/staging/prepub/(facets)/[v0|v1...]/
+        (W):  The Warehouse directories (/p/user_pub/e3sm/warehouse/E3SM/(facets)/[v0|v1...]/
         (W):  The Publication directories (/p/user_pub/work/E3SM/(facets)/[v0|v1...]/
         (S):  The provided sproket_publication_report
 
@@ -36,7 +36,7 @@ helptext = '''
 
 # INPUT FILES
 arch_map  = '/p/user_pub/e3sm/archive/.cfg/Archive_Map'
-warehouse = '/p/user_pub/e3sm/staging/prepub'
+warehouse = '/p/user_pub/e3sm/warehouse/E3SM'
 publicati = '/p/user_pub/work/E3SM'
 esgf_pr   = ''
 # esgf_pr   = '/p/user_pub/e3sm/bartoletti1/Pub_Status/sproket/ESGF_publication_report-20200915.144250'
@@ -58,6 +58,16 @@ def assess_args():
 
     esgf_pr = args.esgf_pr
 
+# Generic Convenience Functions =============================
+
+def loadFileLines(afile):
+    retlist = []
+    if len(afile):
+        with open(afile,"r") as f:
+            retlist = f.read().split('\n')
+        retlist = [ _ for _ in retlist if _[:-1] ]
+    return retlist
+
 
 
 #### BEGIN rationalizing archive and publication experiment-case names, and dataset-type names ####
@@ -65,7 +75,7 @@ def assess_args():
 
 # call to specialize a publication experiment name to an archive experiment name
 
-def specialize_expname(expn,reso,tune):
+def specialize_expname(expn, reso, tune):
     if expn == 'F2010plus4k':
         expn = 'F2010-plus4k'
     if expn[0:5] == 'F2010' or expn == '1950-Control':
@@ -75,17 +85,21 @@ def specialize_expname(expn,reso,tune):
             expn = expn + '-HR'
     return expn
 
-def get_dsid_arch_key( dsid ):
+def get_idval(ensdir):
+    return '.'.join(ensdir.split(os.sep)[5:])
+
+def get_dsid_arch_key(dsid):    # dsid:  see above 
+    # print(f'DSID: {dsid}')
     comps=dsid.split('.')
     expname = specialize_expname(comps[2],comps[3],comps[4])
-    return comps[1],expname,comps[-2]
+    return comps[1],expname,comps[-1]
 
 def get_dsid_type_key( dsid ):
     comps=dsid.split('.')
-    realm = comps[-6]
-    gridv = comps[-5]
-    otype = comps[-4]
-    freq = comps[-3]
+    realm = comps[-5]
+    gridv = comps[-4]   # may be overloaded with "namefile" or "restart"
+    otype = comps[-3]
+    freq = comps[-2]    # will be "fixed" for gridv in "namefile" or "restart"
 
     if realm == 'atmos':
         realm = 'atm'
@@ -107,11 +121,22 @@ def get_dsid_type_key( dsid ):
     elif otype == 'time-series':
         grid = 'reg'
         freq = 'ts-' + freq
+    elif gridv == 'namefile':
+        grid = 'namefile'
+        freq = 'fixed'
+    elif gridv == 'restart':
+        grid = 'restart'
+        freq = 'fixed'
     else:
         grid = 'reg'
     return '_'.join([realm,grid,freq])
 
 #### COMPLETED rationalizing archive and publication experiment-case names, and dataset-type names ####
+
+def isVLeaf(_):
+    if len(_) > 1 and _[0] == 'v' and _[1] in '0123456789':
+        return True
+    return False
 
 def dataset_print_csv( akey, dkey ):
     print(f'{akey[0]},{akey[1]},{akey[2]},{dkey}')
@@ -124,8 +149,7 @@ def main():
 
     # split the Archive_Map into a list of records, each record a list of fields
     #   Campaign,Model,Experiment,Ensemble,DatasetType,ArchivePath,DatatypeTarExtractionPattern,Notes
-    with open(arch_map) as f:
-        contents = f.read().split('\n')
+    contents = loadFileLines(arch_map)
     am_list = [ aline.split(',') for aline in contents if aline[:-1] ]
 
     # create a sorted list of unique dataset types
@@ -163,28 +187,35 @@ def main():
         # if not dirs and (src_selector in root):     # at leaf-directory matching src_selector
         if not dirs:     # at leaf-directory matching src_selector
             warehouse_leaf_dirs.append(root)
-            #for afile in files:
-            #    src_selected.append(os.path.join(root,afile))
 
     wh_nonempty = []
     for adir in warehouse_leaf_dirs:
         # print(adir)
+        ensdir, vleaf = os.path.split(adir)
+        if not isVLeaf(vleaf):
+            continue
         for root, dirs, files in os.walk(adir):
             if files:
-                wh_nonempty.append( tuple([adir,os.path.basename(adir),len(files)]))
+                wh_nonempty.append( tuple([ensdir,vleaf,len(files)]))
 
     for atup in wh_nonempty:
-        dsid = '.'.join(atup[0].split('/')[5:])
+        dsid = get_idval(atup[0]) # ensdir
+        dsid = dsid.replace('/','.')
+        # print(f'DEBUG_W: dsid = {dsid}')
         akey = get_dsid_arch_key( dsid )
         dkey = get_dsid_type_key( dsid )
 
         if not akey in dataset_status:  # first time we've encountered this experiment/case
             dataset_status[akey] = { dstype: { 'A': False, 'W': False, 'P': False, 'S': False } for dstype in dstype_list }
-            dataset_status[akey][dkey]['W'] = True
+            if dkey in dataset_status[akey]:
+                dataset_status[akey][dkey]['W'] = True
+            else:
+                dataset_status[akey][dkey] = { 'A': False, 'W': True, 'P': False, 'S': False }
         elif not dkey in dataset_status[akey]:  # first time we've encountered this dataset type for this experiment/case
             dataset_status[akey][dkey] = { 'A': False, 'W': True, 'P': False, 'S': False }
-        else:  # just set Publication to True
+        else:  # just set Warehouse to True
             dataset_status[akey][dkey]['W'] = True
+
 
     ##########
     # walk the publicati.  Need to assign "model,experiment,ensemble" to each extracted dataset (how to identify?)
@@ -195,24 +226,29 @@ def main():
         # if not dirs and (src_selector in root):     # at leaf-directory matching src_selector
         if not dirs:     # at leaf-directory matching src_selector
             publicati_leaf_dirs.append(root)
-            #for afile in files:
-            #    src_selected.append(os.path.join(root,afile))
 
     pub_nonempty = []
     for adir in publicati_leaf_dirs:
-        # print(adir)
+        ensdir, vleaf = os.path.split(adir)
+        if not isVLeaf(vleaf):
+            continue
         for root, dirs, files in os.walk(adir):
             if files:
-                pub_nonempty.append( tuple([adir,os.path.basename(adir),len(files)]))
+                pub_nonempty.append( tuple([ensdir,os.path.basename(ensdir),len(files)]))
 
     for atup in pub_nonempty:
-        dsid = '.'.join(atup[0].split('/')[4:])
+        dsid = get_idval(atup[0]) # ensdir
+        dsid = 'E3SM.' + dsid.replace(os.sep,'.')
+        # print(f'DEBUG_P: dsid = {dsid}')
         akey = get_dsid_arch_key( dsid )
         dkey = get_dsid_type_key( dsid )
 
         if not akey in dataset_status:  # first time we've encountered this experiment/case
             dataset_status[akey] = { dstype: { 'A': False, 'W': False, 'P': False, 'S': False } for dstype in dstype_list }
-            dataset_status[akey][dkey]['P'] = True
+            if dkey in dataset_status[akey]:
+                dataset_status[akey][dkey]['P'] = True
+            else:
+                dataset_status[akey][dkey] = { 'A': False, 'W': False, 'P': True, 'S': False }
         elif not dkey in dataset_status[akey]:  # first time we've encountered this dataset type for this experiment/case
             dataset_status[akey][dkey] = { 'A': False, 'W': False, 'P': True, 'S': False }
         else:  # just set Publication to True
@@ -224,34 +260,38 @@ def main():
     # obtain the key 'Model,Experiment,Ensemble'
     ##########
 
-    with open(esgf_pr) as f:
-        contents = f.read().split('\n')
+    contents = loadFileLines(esgf_pr)
 
     esgf_pr_list = [ aline.split(',') for aline in contents if aline[:-1] and not aline[0] == 'NOMATCH' ]
-    #esgf_pr_list = [ aline.split(',') for aline in contents if aline[:-1] ]
+    esgf_pr_list = [ _[2] for _ in esgf_pr_list ]
+    dsid_list = [ '.'.join(_.split('.')[:-1]) for _ in esgf_pr_list ]
 
-    # DEBUG/INFO:  Report when any "published" dataset is not an archived dataset
     '''
-    for id in esgf_pr_list:
-        akey = get_dsid_arch_key( id[2] )
-    
+    # DEBUG/INFO:  Report when any "published" dataset is not an archived dataset
+    for id in dsid_list:
+        print(f'DEBUG_S.1: id = {id}')
+        akey = get_dsid_arch_key( id )
         if akey in dataset_status:
             print(f' key { akey } in dataset_status')
         else:
             print(f' key { akey } is NEW')
     '''
-    # sys.exit(0)
 
     # Update 'P' status of this (possibly new) dataset_type in the (possibly new) datasetID_key in the dataset_status table
-    # using the esgf_pr_list (sproket-based publication report)
+    # using the dsid_list (sproket-based publication report)
 
-    for id in esgf_pr_list:
-        akey = get_dsid_arch_key( id[2] )
-        dkey = get_dsid_type_key( id[2] )
+    for dsid in dsid_list:
+        # print(f'DEBUG_S: dsid = {dsid}')
+        akey = get_dsid_arch_key( dsid )
+        dkey = get_dsid_type_key( dsid )
+        # print(f'DEBUG_S: akey = {akey}, dkey = {dkey}')
     
         if not akey in dataset_status:  # first time we've encountered this experiment/case
-            dataset_status[akey] = { dstype: { 'A': False, 'W': False, 'P': False } for dstype in dstype_list }
-            dataset_status[akey][dkey]['P'] = True
+            dataset_status[akey] = { dstype: { 'A': False, 'W': False, 'P': False, 'S': False } for dstype in dstype_list }
+            if dkey in dataset_status[akey]:
+                dataset_status[akey][dkey]['S'] = True
+            else:
+                dataset_status[akey][dkey] = { 'A': False, 'W': False, 'P': False, 'S': True }
         elif not dkey in dataset_status[akey]:  # first time we've encountered this dataset type for this experiment/case
             dataset_status[akey][dkey] = { 'A': False, 'W': False, 'P': False, 'S': True }
         else:  # just set Publication to True
