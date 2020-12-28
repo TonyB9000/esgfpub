@@ -11,15 +11,20 @@ parentName = 'WAREHOUSE'
 subcommand = ''
 gv_logname = ''
 
-# run with "nohup python mapfile_gen_loop.py &"
+'''
+    Run with "nohup python mapfile_generation_service.py &"
 
-# INTENTION:  To be launched and remain in background, seek files from
-#    staging/mapfiles/mapfile_requests/
-# where
-#    filenames are "mapfile_request-<ts>" and contain a single dataset fullpath
-#    NOTE: The 'dataset fullpath" may be either a publication or warehouse version path.
-#
-# usage:  [--warehouse-persona]   (act "warehouse compliant", check/update dataset status file)
+    INTENTION:  To be launched and remain in background, seek files from
+       staging/mapfiles/mapfile_requests/
+    where
+       filenames are "mapfile_request-<ts>" and contain a single dataset fullpath
+       NOTE: The "dataset fullpath" may be either a publication or warehouse version path.
+
+    I was going to make this a flag:
+        [--warehouse-persona]   (act "warehouse compliant", check/update dataset status file)
+    so that the service could perform where no ".status" processing is expected.  Presently,
+    this (--warehouse-persona) is simply the default.
+'''
 
 # ======== convenience ========================
 
@@ -45,6 +50,54 @@ def logMessage(mtype,message):
         f.write(outmessage)
 
 # ======== warehouse ========================
+
+def get_dataset_dirs_loc(anydir,loc):   # loc in ['P','W']
+    global gv_WH_root
+    global gv_PUB_root
+
+    '''
+        Return tuple (ensemblepath,[version_paths])
+        for the dataset indicated by "anydir" whose
+        "dataset_id" part identifies a dataset, and
+        whose root part is warehouse or publication.
+    '''
+
+    if not loc in ['P','W']:
+        logMessage('ERROR',f'invalid dataset location indicator:{loc}')
+        return '',[]
+    if not (gv_WH_root in anydir or gv_PUB_root in anydir):
+        logMessage('ERROR',f'invalid dataset source path - bad root:{anydir}')
+        return '',[]
+    if gv_WH_root in anydir:
+        ds_part = anydir[1+len(gv_WH_root):]
+    else:
+        ds_part = anydir[1+len(gv_PUB_root):]
+
+    tpath, leaf = os.path.split(ds_part)
+
+    if len(leaf) == 0:
+        tpath, leaf = os.path.split(tpath)
+    if leaf[0] == 'v' and leaf[1] in '0123456789':
+        ens_part = tpath
+    elif (leaf[0:3] == 'ens' and leaf[3] in '123456789'):
+        ens_part = ds_part
+    else:
+        logMessage('ERROR',f'invalid dataset source path:{anydir}')
+        return '',[]
+
+    if loc == 'P':
+        a_enspath = os.path.join(gv_PUB_root, ens_part)
+    else:
+        a_enspath = os.path.join(gv_WH_root, ens_part)
+
+    vpaths = []
+    if os.path.exists(a_enspath):
+        vpaths = [ f.path for f in os.scandir(a_enspath) if f.is_dir() ]      # use f.path for the fullpath
+        vpaths.sort()
+
+    # print(f'DEBUG: get_dataset_dirs_loc: RETURNING: a_enspath = {a_enspath}, vpaths = {vpaths}',flush=True)
+    return a_enspath, vpaths
+
 
 gv_WH_root = '/p/user_pub/e3sm/warehouse/E3SM'
 gv_PUB_root = '/p/user_pub/work/E3SM'
