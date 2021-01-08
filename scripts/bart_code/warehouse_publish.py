@@ -8,7 +8,6 @@ import time
 from datetime import datetime
 
 
-parentName = 'WAREHOUSE'
 subcommand = ''
 
 #
@@ -113,6 +112,8 @@ def logMessage(mtype,message):
     outmessage = f'{ts("TS_")}:{mtype}:{message}\n'
     with open(gv_logname, 'a') as f:
         f.write(outmessage)
+        f.flush()
+        os.fsync(f)
 
 # Warehouse-Specific Functions =============================
 
@@ -154,18 +155,18 @@ def freeLock(edir):      # cheap version for now
     lockpath = os.path.join(edir,".lock")
     os.system('rm -f ' + lockpath)
 
-def setStatus(edir,statspec):
-    statfile = os.path.join(edir,'.status')
+def setStatus(statfile,parent,statspec):
     tsval = ts('')
-    statline = f'STAT:{tsval}:{parentName}:{statspec}\n'
+    statline = f'STAT:{tsval}:{parent}:{statspec}\n'
     with open(statfile, 'a') as f:
         f.write(statline)
 
+
 def get_dsid(ensdir,src):   # src must be 'WH' (warehouse) or 'PUB' (publication) directory
     if src == 'WH':
-        return '.'.join(ensdir.split('/')[5:])
+        return '.'.join(ensdir.split(os.sep)[5:])
     elif src == 'PUB':
-        return '.'.join(ensdir.split('/')[4:])
+        return '.'.join(ensdir.split(os.sep)[4:])
 
 
 # stats = dictionary of [<lists of (timestamp,statline) tuples], statline = 'SECTION:status'
@@ -175,6 +176,10 @@ def isActiveStatus(substats,query):     # substats = warehouse dictionary of [<l
 
     testsection = query.split(':')[0]
     test_status = query.split(':')[1]
+
+    if not substats[testsection]:
+        print(f'ERROR: substats has no section = {testsection}')
+        return False
 
     checklist = substats[testsection]   # list of (ts,state) values for testsection
 
@@ -238,29 +243,26 @@ def get_dataset_dirs_loc(anydir,loc):   # loc in ['P','W']
 
     if not loc in ['P','W']:
         logMessage('ERROR',f'invalid dataset location indicator:{loc}')
-        return ''
+        return '',[]
     if not (gv_WH_root in anydir or gv_PUB_root in anydir):
-        logMessage('ERROR',f'invalid dataset source path:{anydir}')
-        return ''
+        logMessage('ERROR',f'invalid dataset source path - bad root:{anydir}')
+        return '',[]
     if gv_WH_root in anydir:
         ds_part = anydir[1+len(gv_WH_root):]
     else:
         ds_part = anydir[1+len(gv_PUB_root):]
 
     tpath, leaf = os.path.split(ds_part)
+
     if len(leaf) == 0:
         tpath, leaf = os.path.split(tpath)
-    if leaf[0] == 'v' and leaf[1] in '123456789':
-        tpath, leaf = os.path.split(tpath)
-        if not (leaf[0:3] == 'ens' and leaf[3] in '123456789'):
-            logMessage('ERROR',f'invalid dataset source path:{anydir}')
-            return ''
-        ens_part = os.path.join(tpath,leaf)
+    if leaf[0] == 'v' and leaf[1] in '0123456789':
+        ens_part = tpath
     elif (leaf[0:3] == 'ens' and leaf[3] in '123456789'):
-        ens_part = os.path.join(tpath,leaf)
+        ens_part = ds_part
     else:
         logMessage('ERROR',f'invalid dataset source path:{anydir}')
-        return ''
+        return '',[]
 
     if loc == 'P':
         a_enspath = os.path.join(gv_PUB_root, ens_part)
@@ -272,6 +274,7 @@ def get_dataset_dirs_loc(anydir,loc):   # loc in ['P','W']
         vpaths = [ f.path for f in os.scandir(a_enspath) if f.is_dir() ]      # use f.path for the fullpath
         vpaths.sort()
 
+    # print(f'DEBUG: get_dataset_dirs_loc: RETURNING: a_enspath = {a_enspath}, vpaths = {vpaths}',flush=True)
     return a_enspath, vpaths
 
 
@@ -280,67 +283,58 @@ def isVLeaf(_):
         return True
     return False
 
+def isEnsDir(_):
+    # print(f'DEBUG: isEnsDir: input = {_}',flush=True)
+    if len(_) > 1 and _[0:3] == 'ens' and _[3] in '0123456789':
+        return True
+    return False
+
 def getWHMaxVersion(enspath):
-    if not gv_WH_root in enspath:
-        print(f'ERROR:getWHMaxVersion:Not a valid warehouse path: {enspath}')
-        return ''
-    if not os.path.isdir(enspath):
-        print(f'ERROR:getWHMaxVersion:Not a current warehouse path: {enspath}')
-        return ''
-    else:
-        vleafs = [ f.name for f in os.scandir(enspath) if f.is_dir() ]      # use f.path for the fullpath
-        vleafs.sort()
-        vmax = vleafs[-1]
-        return vmax
+    epath, vpaths = get_dataset_dirs_loc(enspath,'W')
+    if len(vpaths):
+        apath, vleaf = os.path.split(vpaths[-1])
+        return vleaf
+    return ''
 
 def getWHMaxVersionPath(enspath):
-    vmax = getWHMaxVersion(enspath)
-    if not len(vmax):
-        return ''
-    wh_version_dir = os.path.join(enspath,vmax)
-    return wh_version_dir
+    epath, vpaths = get_dataset_dirs_loc(enspath,'W')
+    if len(vpaths):
+        return vpaths[-1]
+    return ''
 
 def getPubCurrVersionPath(enspath):
-    # trim enspath to id_path if not already (trim off WH_path_root)
-    if not gv_WH_root in enspath:
-        print(f'ERROR:getPubNextVersion:Not a valid warehouse path: {enspath}')
-        return ''
-    idpath = enspath[1+len(gv_WH_root):]
-    pubtestpath = os.path.join(gv_PUB_root,idpath)
-    # print(f'pubtestpath: {pubtestpath}')
-    if not os.path.isdir(pubtestpath):
-        return ''
-    else:
-        vpaths = [ f.path for f in os.scandir(pubtestpath) if f.is_dir() ]      # use f.path for the fullpath
-        vpaths.sort()
+    epath, vpaths = get_dataset_dirs_loc(enspath,'P')
+    if len(vpaths):
         return vpaths[-1]
+    return ''
 
 def getPubNextVersion(enspath):
-    # trim enspath to id_path if not already (trim off WH_path_root)
-    if not gv_WH_root in enspath:
-        print(f'ERROR:getPubNextVersion:Not a valid warehouse path: {enspath}')
-        return ''
-    idpath = enspath[1+len(gv_WH_root):]
-    pubtestpath = os.path.join(gv_PUB_root,idpath)
-    # print(f'pubtestpath: {pubtestpath}')
-    if not os.path.isdir(pubtestpath):
+    epath, vpaths = get_dataset_dirs_loc(enspath,'P')
+    if len(vpaths) == 0:
         return 'v1'
-    else:
-        vleafs = [ f.name for f in os.scandir(pubtestpath) if f.is_dir() ]      # use f.path for the fullpath
-        vleafs.sort()
-        vmaxN = vleafs[-1][1]
-        return 'v' + str(int(vmaxN) + 1)
+    epath, vleaf = os.path.split(vpaths[-1])
+    vmaxN = vleaf[1]
+    return 'v' + str(int(vmaxN) + 1)
 
+def getPubNextVersionPath(enspath):
+    epath, vpaths = get_dataset_dirs_loc(enspath,'P')
+    upver = getPubNextVersion(epath)
+    return os.path.join(epath,upver)
+    
+    
 def setWHPubVersion(enspath):
     pubver = getPubNextVersion(enspath)
     maxwhv = getWHMaxVersion(enspath)
 
-    if len(pubver) and len(maxwhv):
-        srcpath = os.path.join(enspath,maxwhv)
-        dstpath = os.path.join(enspath,pubver)
-        os.rename(srcpath,dstpath)
+    if len(maxwhv) and len(pubver):
+        if not maxwhv == pubver:
+            srcpath = os.path.join(enspath,maxwhv)
+            dstpath = os.path.join(enspath,pubver)
+            os.rename(srcpath,dstpath)
+        return 0
     else:
         print(f'ERROR: cannot rename warehouse paths {maxwhv} to {pubver} for {enspath}')
+        return 1
 
 def isPublishableMaxVersion(edir):
     vmax = getWHMaxVersion(edir)
@@ -348,59 +342,6 @@ def isPublishableMaxVersion(edir):
         return False
     return True
     
-def get_statusfile_dir(apath):
-    global gv_WH_root
-    global gv_PUB_root
-
-    ''' Take ANY inputpath.
-        Reject if not begin with either warehouse_root or publication_root
-        Reject if not a valid version dir or ensemble dir.
-        Trim to ensemble directory, and trim to dataset_part ('E3SM/...').
-        Determine if ".status" exists under wh_root/dataset_part or pub_root/dataset_part.
-        Reject if both or neither, else return full path (root/dataset_part)
-    '''
-    if not (gv_WH_root in apath or gv_PUB_root in apath):
-        logMessage('ERROR',f'invalid dataset source path:{apath}')
-        return ''
-    if gv_WH_root in apath:
-        ds_part = apath[1+len(gv_WH_root):]
-    else:
-        ds_part = apath[1+len(gv_PUB_root):]
-
-    # logMessage('DEBUG',f'ds_part  = {ds_part}')
-
-    tpath, leaf = os.path.split(ds_part)
-    if len(leaf) == 0:
-        tpath, leaf = os.path.split(tpath)
-    if leaf[0] == 'v' and leaf[1] in '123456789':
-        tpath, leaf = os.path.split(tpath)
-        if not (leaf[0:3] == 'ens' and leaf[3] in '123456789'):
-            logMessage('ERROR',f'invalid dataset source path:{apath}')
-            return ''
-        ens_part = os.path.join(tpath,leaf)
-    elif (leaf[0:3] == 'ens' and leaf[3] in '123456789'):
-        ens_part = os.path.join(tpath,leaf)
-    else:
-        logMessage('ERROR',f'invalid dataset source path:{apath}')
-        return ''
-    wpath = os.path.join(gv_WH_root, ens_part, '.status')
-    ppath = os.path.join(gv_PUB_root, ens_part, '.status')
-    # logMessage('DEBUG',f'gv_WH_root  = {gv_WH_root}')
-    # logMessage('DEBUG',f'gv_PUB_root = {gv_PUB_root}')
-    # logMessage('DEBUG',f'wpath = {wpath}')
-    # logMessage('DEBUG',f'ppath = {ppath}')
-    in_w = os.path.exists(wpath)
-    in_p = os.path.exists(ppath)
-    if not (in_w or in_p):
-        logMessage('ERROR',f'status file not found in warehouse or publication:{apath}')
-        return ''
-    if in_w and in_p:
-        logMessage('ERROR',f'status file found in both warehouse and publication:{apath}')
-        return ''
-    if in_w:
-        return os.path.join(gv_WH_root, ens_part)
-    return os.path.join(gv_PUB_root, ens_part)
-
 
 # read status file, convert lines "STAT:ts:PROCESS:status1:status2:..."
 # into dictionary, key = STAT, rows are tuples (ts,'PROCESS:status1:status2:...')
@@ -442,7 +383,8 @@ def load_DatasetStatus(edir):
     for root, dirnames, filenames in os.walk(edir):
         for adir in dirnames:
             if isVLeaf(adir):
-                fcount = countFiles(os.path.join(edir,adir))
+                vpath = os.path.join(edir,adir)
+                fcount = countFiles(vpath)
                 status['VDIR'][adir] = fcount
 
     statdict = load_DatasetStatusFile(edir)     # raw statusfile as dict { STAT: [ (ts,rest_of_line) tuples ], COMM: [ comment lines ] }
@@ -481,7 +423,7 @@ def filterByStatus(dlist,instat):
     pass
 
 def pubVersion(apath):
-    vers = int( apath.split('/')[-1][1:2] )
+    vers = int( apath.split(os.sep)[-1][1:2] )
     return vers
 
 def printList(prefix,alist):
@@ -509,13 +451,19 @@ def conductMapfileGen(pub_path):    # pub_path is the best publishable dir, or e
             (It will be picked up by the Mapfile_Gen_Loop background process)
         Issue 'MAPFILE_GEN:Engaged'
     '''
+    edir_w, vdirs_w = get_dataset_dirs_loc(pub_path,'W')
 
     # create a file in the map-publish directory containing the successful publish paths
     edir, vleaf = os.path.split(pub_path)
+    statfile = os.path.join(edir_w,'.status')
+    setStatus(statfile,'MAPFILE_GEN',f'Engaged:dstdir={vleaf}')
+
     dsid = get_dsid(edir,'PUB')
-    req_file_name = f'mapfile_request-{dsid}'
+    req_file_name = f"mapfile_request-{dsid}-{ts('')}"
     req_file = os.path.join(gv_Mapfile_Auto_Gen,req_file_name)
     printFileList(req_file,[pub_path])
+
+    setStatus(statfile,'MAPFILE_GEN',f'Queued:dstdir={vleaf}')
 
     return True
 
@@ -527,21 +475,25 @@ def conductPublication(adir,stagespec):        # cheat:  stagespec is either PUB
 
     ### Now, become PUBLICATION, calling either its PUB_PUSH (to transfer files to publication) or PUB_COMMIT (to copy its mapfile to pub_loop)
 
-    parentName = 'PUBLICATION'
+    if stagespec == 'PUB_PUSH':
 
-    if stagespec == 'PUB_PUSH:Engaged':
+        edir_w, vdirs_w = get_dataset_dirs_loc(adir,'W')
+        edir_p, vdirs_p = get_dataset_dirs_loc(adir,'P')
 
-        edir = adir
-        ppath = getPubCurrVersionPath(edir)
-        vleaf = getWHMaxVersion(edir)
-        wpath = os.path.join(edir,vleaf)
+        statfile = os.path.join(edir_w,'.status')
+
+        # Note: the warehouse max_vpath has already been set to 1 + max_pub_vpath by warehouse_assign.
+        # All that the new pub_path creation involves here is to create the 
+        ppath = getPubNextVersionPath(adir)
+        vleaf = getWHMaxVersion(adir)
+        wpath = os.path.join(edir_w,vleaf)
 
         wfilenames = [files for _, _, files in os.walk(wpath)][0]
         wfilenames.sort()
         wcount = len(wfilenames)
         logMessage('INFO',f'Processing: {wcount} files: {wpath}')
 
-        setStatus(edir,f'PUB_PUSH:Engaged:srcdir={vleaf},filecount={wcount}')
+        setStatus(statfile,'PUBLICATION',f'PUB_PUSH:Engaged:srcdir={vleaf},filecount={wcount}')
 
         pcount = 0
         if os.path.exists(ppath):
@@ -554,9 +506,10 @@ def conductPublication(adir,stagespec):        # cheat:  stagespec is either PUB
                 if( len(in_both) > 0 ):
                     logMessage('WARNING',f'Skipping warehouse path: existing destination has {len(in_both)} matching files by name')
                     logMessage('REJECTED',f'{wpath}')
-                    setStatus(edir,f'PUB_PUSH:Fail:destination_file_collision')
+                    setStatus(statfile,'PUBLICATION',f'{stagespec}:Fail:destination_file_collision')
                     return False
         else:
+            ''' CREATE NEW PUBLICATION PATH HERE '''
             os.makedirs(ppath,exist_ok=True)
             os.chmod(ppath,0o775)
 
@@ -569,7 +522,7 @@ def conductPublication(adir,stagespec):        # cheat:  stagespec is either PUB
             except shutil.Error:
                 logMessage('WARNING',f'shutil - cannot move file: {wfile}')
                 logMessage('REJECTED',f'{wpath}')
-                setStatus(edir,f'PUB_PUSH:Fail:file_move_error')
+                setStatus(statfile,'PUBLICATION',f'{stagespec}:Fail:file_move_error')
                 broken = True
                 break
             try:
@@ -586,38 +539,40 @@ def conductPublication(adir,stagespec):        # cheat:  stagespec is either PUB
         if not finalpcount == (pcount + wcount):
             logMessage('WARNING',f'Discrepency in filecounts:  pub_original={pcount}, pub_warehouse={wcount}, pub_final={pcount+wcount}')
             logMessage('WARNING',f'{wpath}')
-            setStatus(edir,f'PUB_PUSH:Fail:bad_destination_filecount')
+            setStatus(statfile,'PUBLICATION',f'{stagespec}:Fail:bad_destination_filecount')
             return False
 
         logMessage('INFO',f'Moved {wcount} files to {ppath}')
 
-        setStatus(edir,f'PUB_PUSH:Pass')
+        setStatus(statfile,'PUBLICATION',f'{stagespec}:Pass:dstdir={vleaf}')
 
-    if stagespec == 'PUB_COMMIT:Engaged':
+        return True
 
-        pdir = adir
+    if stagespec == 'PUB_COMMIT':
+
+        edir_w, vdirs_w = get_dataset_dirs_loc(adir,'W')
+        pdir = getPubCurrVersionPath(adir)
 
         wfilenames = [files for _, _, files in os.walk(pdir)][0]
         wfilenames.sort()
         wcount = len(wfilenames)
         # copy the pdir's .mapfile to auto_pub/<dsid>.map
-        edir, vleaf = os.path.split(pdir)
-        dsid = get_dsid(edir,'PUB')
+        edir_p, vleaf = os.path.split(pdir)
+        dsid = get_dsid(edir_p,'PUB')
         mapfile_name = '.'.join([dsid,'map'])
         mapfile_path = os.path.join(gv_Mapfile_Auto_Pub,mapfile_name)
         # copy to mapfiles/mapfiles_auto_publish
         curr_mapfile = os.path.join(pdir,'.mapfile')
         shutil.copyfile(curr_mapfile,mapfile_path)
         
-        logMessage('INFO',f'Initiated Pub_Commit: {wcount} files: {pdir}')
-        setStatus(edir,f'PUB_COMMIT:Engaged:srcdir={vleaf},filecount={wcount}')
+        logMessage('INFO',f'Initiated {stagespec}: {wcount} files: {pdir}')
+        setStatus(statfile,'PUBLICATION',f'{stagespec}:Engaged:srcdir={vleaf},filecount={wcount}')
 
     return True
 
 
 
 def main():
-    global parentName
 
     assess_args()
 
@@ -626,129 +581,105 @@ def main():
     # obtain list of directories to limit processing
     EnsList = loadFileLines(gv_EnsList)
 
-
-
-    # DEBUG:  Test get_dataset_dirs_loc(anydir,loc)
-
-    testpath = EnsList[0]
-    epath, vlist = get_dataset_dirs_loc(testpath,'W')
-    print(f'The Ensemble Dir: {epath}')
-    for vpath in vlist:
-        print(f'       A Pub dir: {vpath}')
-
-    sys.exit(0)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # sys.exit(0)
-
     p_rejects = []
     p_failure = []
     p_success = []
-    # for each listed Ensemble directory:
-    #   Ensure valid warehouse directory
-    #   Consult Locks, and Statusfile for Holds, Blocks, and both PUBLICATION:Ready and PUBLICATION:Unblocked
-    #   If all tests pass, call conductWahrehousePublication()
 
-    # CHEAT!  If spec is either MAPFILE_GEN or PUBLICATION:COMMIT, convert all edirs to pdirs
     srcdirs = EnsList
-    if gv_ChildSpec in ['MAPFILE_GEN', 'PUBLICATION:PUB_COMMIT']:
-        srcdirs = [ getPubCurrVersionPath(edir) for edir in EnsList ]
-
-    # printList('',srcdirs)
-    # sys.exit(0)
 
     childp = gv_ChildSpec.split(':')[0]
 
     if childp == "PUBLICATION":
         action = gv_ChildSpec.split(':')[1]     # may be PUB_PUSH or PUB_COMMIT
 
-        for pdir in srcdirs:
-            edir, vleaf = os.path.split(pdir)
-            # valid warehouse ensemble directory?
-            if action == "PUB_PUSH" and not isWarehouseEnsemble(edir):
-                logMessage('WARNING',f'Not a warehouse ensemble directory:{edir}')
-                p_rejects.append(pdir)
+        for adir in srcdirs:
+
+            edir_w, vdirs_w = get_dataset_dirs_loc(adir,'W')
+            edir_p, vdirs_p = get_dataset_dirs_loc(adir,'P')
+
+            statfile = os.path.join(edir_w,'.status')
+
+            if action == 'PUB_PUSH' and (len(edir_w) == 0 or len(vdirs_w) == 0):
+                logMessage('WARNING',f'Unrecognized corresponding warehouse dataset directory:{adir}')
+                p_rejects.append(adir)
                 continue
-            # valid publication directory?
-            if action == "PUB_COMMIT" and not isPublicationDirectory(pdir):
-                logMessage('WARNING',f'Not a valid publication directory:{pdir}')
-                p_rejects.append(pdir)
+            if action == 'PUB_COMMIT' and (len(edir_p) == 0 or len(vdirs_p) == 0):
+                logMessage('WARNING',f'Unrecognized corresponding publication dataset directory:{adir}')
+                p_rejects.append(adir)
                 continue
+            vdirw = vdirs_w[-1]
+
             # is dataset locked?       
-            if isLocked(edir):
-                logMessage('WARNING',f'Dataset Locked:{edir}')
-                p_rejects.append(pdir)
+            if isLocked(edir_w) or isLocked(edir_p):
+                logMessage('WARNING',f'Dataset Locked:{edir_w}')
+                p_rejects.append(adir)
                 continue
 
-            setLock(edir)
+            if action == 'PUB_PUSH':
+                setLock(edir_w)
+            else:
+                setLock(edir_p)
 
             # READ the status file
-            ds_status = load_DatasetStatus(edir) # keys = PATH, VDIR, STAT, COMM
+            ds_status = load_DatasetStatus(edir_w) # keys = PATH, VDIR, STAT, COMM
             stats = ds_status['STAT']
             substats = status_breakdown(stats['WAREHOUSE'])
 
-            if action == "PUB_PUSH" and not isPublishableMaxVersion(pdir):
-                logMessage('WARNING',f'Dataset MaxVersion {getWHMaxVersion(pdir)} not publishable: {pdir}')
-                p_rejects.append(pdir)
+            if action == "PUB_PUSH" and not isPublishableMaxVersion(edir_w):
+                logMessage('WARNING',f'Dataset MaxVersion not publishable: {vdirw}')
+                p_rejects.append(adir)
+                freeLock(edir_w)
                 continue
 
             if isActiveStatus(substats,'PUBLICATION:Blocked'):
-                logMessage('WARNING',f'Dataset Publication Blocked:{pdir}')
-                p_rejects.append(pdir)
+                logMessage('WARNING',f'Dataset Publication Blocked:{vdirw}')
+                p_rejects.append(adir)
                 freeLock(edir)
                 continue
 
             if action == "PUB_PUSH" and not isActiveStatus(substats,'PUBLICATION:Ready'):
-                logMessage('WARNING',f'Dataset Pub_Push not Ready:{pdir}')
-                p_rejects.append(pdir)
-                freeLock(edir)
+                logMessage('WARNING',f'Dataset Pub_Push not Ready:{adir}')
+                p_rejects.append(adir)
+                freeLock(edir_w)
                 continue
 
-            if action == "PUB_COMMIT" and not (isActiveStatus(substats,'PUB_PUSH:Pass') and isActiveStatus(substats,'MAPFILE_GEN:Pass')):
-                logMessage('WARNING',f'Dataset Pub_Commit not Ready:{pdir}')
-                p_rejects.append(pdir)
-                freeLock(edir)
+            # if action == "PUB_COMMIT" and not (isActiveStatus(substats,'PUB_PUSH:Pass') and isActiveStatus(substats,'MAPFILE_GEN:Pass')):
+            if action == "PUB_COMMIT" and not isActiveStatus(substats,'MAPFILE_GEN:Pass'):
+                logMessage('WARNING',f'Dataset Pub_Commit not Ready:{adir}')
+                p_rejects.append(adir)
+                freeLock(edir_p)
                 continue
 
             ### Cheat: First, ensure we're the WAREHOUSE, engaging the PUBLICATION workflow
-            parentName = 'WAREHOUSE'
-            setStatus(edir,f'PUBLICATION:Engaged')
+            setStatus(statfile,'WAREHOUSE',f'PUBLICATION:Engaged')
+            if action == "PUB_COMMIT":
+                setStatus(statfile,'WAREHOUSE',f'PUBLICATION:PUB_COMMIT:Ready')
             ### End Cheat
 
 
             # lets publish!
-            pub_result = conductPublication(pdir,action)
+            pub_result = conductPublication(adir,action)
             # pub_result = True
 
             ### Cheat: Pretend we are WAREHOUSE, reporting status of PUBLICATION (so far)
-            parentName = 'WAREHOUSE'
 
             if pub_result == True:
-                setStatus(edir,f'PUBLICATION:Success:{action}')
-                setStatus(edir,f'MAPFILE_GEN:Ready')
-                p_success.append(pdir)
+                setStatus(statfile,'WAREHOUSE',f'PUBLICATION:{action}:Pass')
+                if action == "PUB_PUSH":
+                    setStatus(statfile,'WAREHOUSE',f'MAPFILE_GEN:Ready')
+                p_success.append(adir)
             else:
-                setStatus(edir,f'PUBLICATION:Failure:{action}')
-                p_failure.append(pdir)
+                setStatus(statfile,'WAREHOUSE',f'PUBLICATION:{action}:Fail')
+                p_failure.append(adir)
 
             ### End Cheat
 
-            freeLock(edir)
+            if action == "PUB_PUSH":
+                freeLock(edir_w)
+            else:
+                freeLock(edir_p)
 
-        logMessage('INFO',f'Moved {len(p_success)} datasets to publishing, launching background mapfile_publication (to publoop)')
+        logMessage('INFO',f'Pushed {len(p_success)} datasets to publishing')
 
     if childp == 'MAPFILE_GEN':
         for adir in srcdirs:
@@ -768,14 +699,18 @@ def main():
             setLock(adir)
             '''
 
+            edir_w, vdirs_w = get_dataset_dirs_loc(adir,'W')
+            edir_p, vdirs_p = get_dataset_dirs_loc(adir,'P')
+
+            statfile = os.path.join(edir_w,'.status')
+
             # READ the status file
-            stat_dir = get_statusfile_dir(adir)
-            ds_status = load_DatasetStatus(stat_dir) # keys = PATH, VDIR, STAT, COMM
+            ds_status = load_DatasetStatus(edir_w) # keys = PATH, VDIR, STAT, COMM
             stats = ds_status['STAT']
             substats = status_breakdown(stats['WAREHOUSE'])
 
             if isActiveStatus(substats,'MAPFILE_GEN:Blocked'):
-                logMessage('WARNING',f'Dataset Mapfile_Gen Blocked:{adir}')
+                logMessage('WARNING',f'Dataset Mapfile_Gen Blocked:{edir_w}')
                 p_rejects.append(adir)
                 # freeLock(adir) # for now, only for warehouse dirs
                 continue
@@ -787,26 +722,27 @@ def main():
                 continue
 
             ### Cheat: First, ensure we're the WAREHOUSE, engaging the MAPFILE_GEN workflow
-            parentName = 'WAREHOUSE'
-            setStatus(stat_dir,f'MAPFILE_GEN:Engaged')
+            setStatus(statfile,'WAREHOUSE',f'MAPFILE_GEN:Engaged')
             ### End Cheat
 
             # Generate a Mapfile
-            mapgen_result = conductMapfileGen(adir)
+            pdir = vdirs_p[-1]
+            mapgen_result = conductMapfileGen(pdir)
 
-            ### Cheat: Pretend we are WAREHOUSE, reporting status of PUBLICATION (so far)
-            parentName = 'WAREHOUSE'
+            ### Cheat: Pretend we are WAREHOUSE, reporting status of MAPFILE_GEN (so far)
 
             if mapgen_result == True:
-                setStatus(stat_dir,f'MAPFILE_GEN:Success:')
+                setStatus(statfile,'WAREHOUSE',f'MAPFILE_GEN:Queued:')
                 p_success.append(adir)
             else:
-                setStatus(stat_dir,f'MAPFILE_GEN:Failure:')
+                setStatus(statfile,'WAREHOUSE',f'MAPFILE_GEN:Failure:')
                 p_failure.append(adir)
 
             ### End Cheat
 
             # freeLock(adir) # for now, only for warehouse dirs
+
+        logMessage('INFO',f'Queued {len(p_success)} datasets to background mapfile_gen_loop (mapfiles/mapfile_requests)')
 
 
     logMessage('INFO',f'{childp}:Reject Datasets: {len(p_rejects)}')
@@ -825,4 +761,15 @@ if __name__ == "__main__":
 
 
 
+# ==== save this test ==== 
+
+'''
+for adir in EnsList:
+    edir_w, vdirs_w = get_dataset_dirs_loc(adir,'W')
+    print(f'DEBUG_TEST:get_dataset_dirs_loc W')
+    print(f'DEBUG_TEST:    inpath =  {adir}')
+    print(f'DEBUG_TEST:    edir_w =  {edir_w}')
+    print(f'DEBUG_TEST:    vdirs_w = {vdirs_w}')
+sys.exit(0)
+'''
 

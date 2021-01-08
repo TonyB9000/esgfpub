@@ -395,29 +395,26 @@ def get_dataset_dirs_loc(anydir,loc):   # loc in ['P','W']
 
     if not loc in ['P','W']:
         logMessage('ERROR',f'invalid dataset location indicator:{loc}')
-        return ''
+        return '',[]
     if not (gv_WH_root in anydir or gv_PUB_root in anydir):
-        logMessage('ERROR',f'invalid dataset source path:{anydir}')
-        return ''
+        logMessage('ERROR',f'invalid dataset source path - bad root:{anydir}')
+        return '',[]
     if gv_WH_root in anydir:
         ds_part = anydir[1+len(gv_WH_root):]
     else:
         ds_part = anydir[1+len(gv_PUB_root):]
 
     tpath, leaf = os.path.split(ds_part)
+
     if len(leaf) == 0:
         tpath, leaf = os.path.split(tpath)
-    if leaf[0] == 'v' and leaf[1] in '123456789':
-        tpath, leaf = os.path.split(tpath)
-        if not (leaf[0:3] == 'ens' and leaf[3] in '123456789'):
-            logMessage('ERROR',f'invalid dataset source path:{anydir}')
-            return ''
-        ens_part = os.path.join(tpath,leaf)
+    if leaf[0] == 'v' and leaf[1] in '0123456789':
+        ens_part = tpath
     elif (leaf[0:3] == 'ens' and leaf[3] in '123456789'):
-        ens_part = os.path.join(tpath,leaf)
+        ens_part = ds_part
     else:
         logMessage('ERROR',f'invalid dataset source path:{anydir}')
-        return ''
+        return '',[]
 
     if loc == 'P':
         a_enspath = os.path.join(gv_PUB_root, ens_part)
@@ -429,6 +426,7 @@ def get_dataset_dirs_loc(anydir,loc):   # loc in ['P','W']
         vpaths = [ f.path for f in os.scandir(a_enspath) if f.is_dir() ]      # use f.path for the fullpath
         vpaths.sort()
 
+    # print(f'DEBUG: get_dataset_dirs_loc: RETURNING: a_enspath = {a_enspath}, vpaths = {vpaths}',flush=True)
     return a_enspath, vpaths
 
 
@@ -470,17 +468,25 @@ def getPubNextVersion(enspath):
     vmaxN = vleaf[1]
     return 'v' + str(int(vmaxN) + 1)
 
+def getPubNextVersionPath(enspath):
+    epath, vpaths = get_dataset_dirs_loc(enspath,'P')
+    upver = getPubNextVersion(epath)
+    return os.path.join(epath,upver)
+
 
 def setWHPubVersion(enspath):
-    pubver = getPubNextVersion(enspath)
     maxwhv = getWHMaxVersion(enspath)
+    pubver = getPubNextVersion(enspath)
 
-    if len(pubver) and len(maxwhv):
-        srcpath = os.path.join(enspath,maxwhv)
-        dstpath = os.path.join(enspath,pubver)
-        os.rename(srcpath,dstpath)
+    if len(maxwhv) and len(pubver):
+        if not maxwhv == pubver:
+            srcpath = os.path.join(enspath,maxwhv)
+            dstpath = os.path.join(enspath,pubver)
+            os.rename(srcpath,dstpath)
+        return 0
     else:
         print(f'ERROR: cannot rename warehouse paths {maxwhv} to {pubver} for {enspath}')
+        return 1
 
 
 # get a selected subset of warehouse directories
@@ -749,10 +755,6 @@ def main():
 
     if not assess_args():
         sys.exit(1)
-
-
-    # print(f' ts = {ts('TS_')}')
-    # sys.exit(0)
 
     # easy stuff first, reads not writes
     if len(gv_PathSpec) > 0:

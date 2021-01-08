@@ -7,7 +7,6 @@ import subprocess
 import time
 from datetime import datetime
 
-parentName = 'WAREHOUSE'
 subcommand = ''
 gv_logname = ''
 
@@ -156,12 +155,12 @@ def get_statusfile_dir(apath):
     return os.path.join(gv_PUB_root, ens_part)
         
 
-def setStatus(edir,statspec):
-    statfile = os.path.join(edir,'.status')
+def setStatus(statfile,parent,statspec):
     tsval = ts('')
-    statline = f'STAT:{tsval}:{parentName}:{statspec}\n'
+    statline = f'STAT:{tsval}:{parent}:{statspec}\n'
     with open(statfile, 'a') as f:
         f.write(statline)
+
 
 def mapfile_validate(srcdir):
     ''' at this point, the srcdir should contain both datafiles (*.nc)
@@ -189,6 +188,7 @@ def mapfile_validate(srcdir):
 input_dir = '/p/user_pub/e3sm/staging/mapfiles/mapfile_requests'
 exput_dir = '/p/user_pub/e3sm/staging/mapfiles/mapfiles_output'
 ini_path = '/p/user_pub/e3sm/staging/ini_std/'
+# calls esgmapfile make, moves finished mapfile to pub_path/.../ens#/v#/.mapfile
 esgmapfile_make = '/p/user_pub/e3sm/bartoletti1/Pub_Work/2_Mapwork/esgmapfile_make.sh'
 
 searchpath = os.path.join(input_dir,'mapfile_request.*')
@@ -198,7 +198,6 @@ pwd = os.getcwd()
 req_done = os.path.join(pwd,'requests_processed')
 
 def main():
-    global parentName
 
     # assess_args()
     logMessageInit('runlog_mapfile_gen_loop')
@@ -225,10 +224,14 @@ def main():
                 time.sleep(5)
                 continue        # error message already given
 
+        statfile = os.path.join(stat_path,'.status')
+
         logMessage('INFO',f'MAPGENLOOP:Launching Request Path:{request_path}')
         tm_start = time.time()
         # CALL the Mapfile Maker
         # WAIT here until esgmapfile_make returns
+        if warehouse_persona:
+            setStatus(statfile,'WAREHOUSE',f'MAPFILE_GEN:Engaged')
         retcode = os.system(f'{esgmapfile_make} {request_path}')
         tm_final = time.time()
         ET = tm_final - tm_start
@@ -247,18 +250,18 @@ def main():
             # write logfile entry, then
             logMessage('STATUS',f'MAPFILE_GEN:Fail:ret_code={retcode}')
             if warehouse_persona:
-                setStatus(stat_path,f'MAPFILE_GEN:Fail:ret_code={retcode}')
+                setStatus(statfile,'WAREHOUSE',f'MAPFILE_GEN:Fail:ret_code={retcode}')
             continue
         if not mapfile_validate(request_path):
             # write logfile entry, then
             logMessage('STATUS',f'MAPFILE_GEN:Fail:Bad_mapfile')
             if warehouse_persona:
-                setStatus(stat_path,f'MAPFILE_GEN:Fail:Bad_mapfile')
+                setStatus(statfile,'WAREHOUSE',f'MAPFILE_GEN:Fail:Bad_mapfile')
             continue
         # write logfile entry, then
         logMessage('STATUS',f'MAPFILE_GEN:Pass')
         if warehouse_persona:
-            setStatus(stat_path,'MAPFILE_GEN:Pass')
+            setStatus(statfile,'WAREHOUSE','MAPFILE_GEN:Pass')
 
       
 if __name__ == "__main__":
