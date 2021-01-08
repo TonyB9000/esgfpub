@@ -23,7 +23,7 @@ helptext = '''
 
     For instance:
 
-        python archive_map_to_dsid -i file_of_archive_map_lines --prefix extract_request
+        python archive_map_to_dsid -i file_of_archive_map_lines --prefix extraction_request-
 
     will produce as output the files needed to supply to the archive_extraction_loop process
     input queue,
@@ -108,10 +108,10 @@ def get_archspec(archline):
     archspec['apath'] = archvals[5]
     archspec['apatt'] = archvals[6]
 
-    if 'ne30' in archspec['apath']:
-        archspec['resol'] = '1deg_atm_60-30km_ocean'
     if 'ne120' in archspec['apath']:
         archspec['resol'] = '0_25deg_atm_18-6km_ocean'
+    else:
+        archspec['resol'] = '1deg_atm_60-30km_ocean'
 
     return archspec
 
